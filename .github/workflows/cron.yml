@@ -1,0 +1,13 @@
+name: scheduler-tick
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # alle 15 Minuten (UTC)
+  workflow_dispatch: {}       # manueller Test-Trigger
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call worker
+        run: |
+          curl -fsS -X POST "${{ secrets.TICK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
