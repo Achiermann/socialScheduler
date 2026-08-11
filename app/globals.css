@@ -26,3 +26,10 @@ button.play { background: none; color: #1c1917; padding: 0 6px; font-size: 13px;
 textarea.small { min-height: 40px; font-size: 12px; min-width: 110px; }
 .nowrap { white-space: nowrap; }
 .sep { width: 12px; }
+td.drag { cursor: grab; color: #a8a29e; font-size: 16px; user-select: none; width: 24px; }
+td.drag:active { cursor: grabbing; }
+tr.dragover td { border-top: 2px solid #1c1917; }
+td.drag { vertical-align: middle; text-align: center; }
+tbody tr { cursor: grab; }
+tbody tr:active { cursor: grabbing; }
+tbody td:has(input), tbody td:has(textarea), tbody td:has(button) { cursor: auto; }

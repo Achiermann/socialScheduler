@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
@@ -23,6 +23,28 @@ export default function Dashboard() {
   const [dirty, setDirty] = useState({});
   const [apStart, setApStart] = useState("");
   const [apDays, setApDays] = useState(2);
+  const dragId = useRef(null);
+  const [overId, setOverId] = useState(null);
+  const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
+
+  async function dropOn(targetId) {
+    const from = dragId.current;
+    dragId.current = null;
+    setOverId(null);
+    if (!from || from === targetId) return;
+    const list = [...posts];
+    const fromIdx = list.findIndex((p) => p.id === from);
+    const toIdx = list.findIndex((p) => p.id === targetId);
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+    setPosts(list);
+    const res = await fetch("/api/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: list.map((p) => p.id) }),
+    });
+    setMsg(res.ok ? "Reihenfolge gespeichert." : "Fehler beim Speichern der Reihenfolge.");
+  }
 
   async function load() {
     const res = await fetch("/api/posts");
@@ -104,6 +126,7 @@ export default function Dashboard() {
         <thead>
           <tr>
             <th></th>
+            <th></th>
             <th>Video</th>
             <th style={{ width: 175 }}>Geplant (Lokalzeit)</th>
             <th>Caption</th>
@@ -117,10 +140,26 @@ export default function Dashboard() {
         </thead>
         <tbody>
           {posts.map((p) => (
-            <tr key={p.id}>
+            <tr
+              key={p.id}
+              className={overId === p.id ? "dragover" : ""}
+              draggable={armed === p.id}
+              onMouseDown={(e) => {
+                // Ganze Zeile ziehbar - ausser auf interaktiven Elementen
+                if (!e.target.closest("input, textarea, button, select, a")) setArmed(p.id);
+              }}
+              onMouseUp={() => setArmed(null)}
+              onDragStart={() => { dragId.current = p.id; }}
+              onDragEnd={() => { dragId.current = null; setOverId(null); setArmed(null); }}
+              onDragOver={(e) => { e.preventDefault(); setOverId(p.id); }}
+              onDragLeave={() => setOverId(null)}
+              onDrop={(e) => { e.preventDefault(); dropOn(p.id); }}
+            >
+              <td className="drag" title="Ziehen zum Umsortieren">⠿</td>
               <td>
                 <img
                   className="thumb"
+                  draggable={false}
                   src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
                   alt=""
                   loading="lazy"

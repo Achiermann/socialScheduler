@@ -12,6 +12,7 @@ export async function POST(req) {
     .from("posts")
     .select("id")
     .is("scheduled_at", null)
+    .order("sort_order", { ascending: true, nullsFirst: false })
     .order("filename");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

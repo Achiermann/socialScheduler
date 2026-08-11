@@ -13,7 +13,12 @@ export async function POST() {
     const { data: existing } = await supabase.from("posts").select("id, filename, dropbox_path");
     const byName = new Map((existing || []).map((p) => [p.filename, p]));
 
-    const fresh = videos.filter((v) => !byName.has(v.filename));
+    const { data: maxRow } = await supabase
+      .from("posts").select("sort_order").order("sort_order", { ascending: false, nullsFirst: false }).limit(1);
+    let nextOrder = (maxRow?.[0]?.sort_order || 0) + 1;
+    const fresh = videos
+      .filter((v) => !byName.has(v.filename))
+      .map((v) => ({ ...v, sort_order: nextOrder++ }));
     if (fresh.length) {
       const { error } = await supabase.from("posts").insert(fresh);
       if (error) throw new Error(error.message);
