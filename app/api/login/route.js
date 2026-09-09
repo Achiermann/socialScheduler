@@ -7,7 +7,8 @@ async function sha256(text) {
 
 export async function POST(req) {
   const { code } = await req.json();
-  if (!code || code !== process.env.ACCESS_CODE) {
+  const codes = (process.env.ACCESS_CODE || "").split(",").map((c) => c.trim()).filter(Boolean);
+  if (!code || !codes.includes(code)) {
     return NextResponse.json({ error: "invalid" }, { status: 401 });
   }
   const res = NextResponse.json({ ok: true });

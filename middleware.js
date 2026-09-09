@@ -19,9 +19,12 @@ export async function middleware(req) {
   ) {
     return NextResponse.next();
   }
+  // ACCESS_CODE darf mehrere Codes enthalten (kommagetrennt) - praktisch fuer
+  // temporaere Review-Zugaenge, die man danach einfach wieder entfernt.
   const cookie = req.cookies.get("auth")?.value;
-  const expected = await sha256(process.env.ACCESS_CODE || "");
-  if (cookie === expected) return NextResponse.next();
+  const codes = (process.env.ACCESS_CODE || "").split(",").map((c) => c.trim()).filter(Boolean);
+  const hashes = await Promise.all(codes.map(sha256));
+  if (cookie && hashes.includes(cookie)) return NextResponse.next();
   if (pathname.startsWith("/api/")) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

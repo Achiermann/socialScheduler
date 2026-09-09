@@ -244,3 +244,5 @@ main.legal li::marker { color: var(--blue-600); }
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
 }
+main.legal code { background: #e7e5e4; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+main.legal a { color: #1c1917; }
