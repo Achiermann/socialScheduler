@@ -54,10 +54,14 @@ export default function Dashboard() {
 
   // Rueckmeldung vom TikTok-OAuth-Callback (?tiktok=...) anzeigen
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get("tiktok");
-    if (!p) return;
-    setMsg(p === "verbunden" ? "TikTok verbunden." : `TikTok-Fehler: ${p}`);
-    window.history.replaceState({}, "", "/");
+    const q = new URLSearchParams(window.location.search);
+    for (const k of ["tiktok", "youtube"]) {
+      const p = q.get(k);
+      if (!p) continue;
+      const name = k === "tiktok" ? "TikTok" : "YouTube";
+      setMsg(p === "verbunden" ? `${name} verbunden.` : `${name}-Fehler: ${p}`);
+      window.history.replaceState({}, "", "/");
+    }
   }, []);
 
   function edit(id, fields) {
@@ -152,6 +156,7 @@ export default function Dashboard() {
         </button>
         <span className="sep" />
         <a className="link" href="/api/tiktok/auth">TikTok verbinden</a>
+        <a className="link" href="/api/youtube/auth">YouTube verbinden</a>
       </div>
       <p className="msg">{posts.length} Posts, davon {unscheduled} ohne Datum. {msg}</p>
       <table>
@@ -258,7 +263,13 @@ export default function Dashboard() {
                       onClick={() => { edit(p.id, { tt_status: "pending" }); }}>&#8635;</button>
                   )}
                 </div>
-                <div>YT <Badge status={p.yt_status} /></div>
+                <div>
+                  YT <Badge status={p.yt_status} />
+                  {p.yt_status === "error" && (
+                    <button className="play" title="Erneut versuchen"
+                      onClick={() => { edit(p.id, { yt_status: "pending" }); }}>&#8635;</button>
+                  )}
+                </div>
               </td>
               <td>
                 <button className="secondary" disabled={!dirty[p.id] || busy} onClick={() => save(p.id)}>

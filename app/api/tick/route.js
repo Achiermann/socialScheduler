@@ -3,6 +3,7 @@ import { db } from "@/lib/supabase";
 import { temporaryLink } from "@/lib/dropbox";
 import { currentToken as igToken, publishReel } from "@/lib/instagram";
 import { currentToken as ttToken, uploadToInbox } from "@/lib/tiktok";
+import { currentToken as ytToken, uploadShort } from "@/lib/youtube";
 
 export const maxDuration = 300; // Vercel: bis 5 Min Laufzeit erlauben
 
@@ -73,9 +74,27 @@ export async function POST(req) {
       }
     }
 
+    // --- 3. YouTube Shorts ---
+    const ytPost = await nextDue("post_yt", "yt_status");
+    if (ytPost) {
+      try {
+        const token = await ytToken(supabase);
+        const videoUrl = await temporaryLink(ytPost.dropbox_path);
+        const videoId = await uploadShort(token, videoUrl, ytPost.filename, ytPost.caption || "");
+        await supabase
+          .from("posts")
+          .update({ yt_status: "published", yt_video_id: videoId, last_error: null, updated_at: now() })
+          .eq("id", ytPost.id);
+        return NextResponse.json({ done: "youtube", filename: ytPost.filename });
+      } catch (e) {
+        return await fail(ytPost, "yt_status", e);
+      }
+    }
+
     // --- Nichts faellig: Tokens frisch halten ---
     try { await igToken(supabase); } catch { /* noch nicht konfiguriert */ }
     try { await ttToken(supabase); } catch { /* noch nicht verbunden */ }
+    try { await ytToken(supabase); } catch { /* noch nicht verbunden */ }
     return NextResponse.json({ done: 0 });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
