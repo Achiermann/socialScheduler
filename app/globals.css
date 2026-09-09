@@ -1,40 +1,246 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* Design-Vokabular nach SBB-Vorbild, Markenfarbe hellblau statt rot.
+   Weiss auf #5AAFE0 liegt bei 2.1:1 - deshalb steht Text auf Blau immer
+   in Marine (--blue-ink), Akzente auf Weiss in --blue-600 (4.9:1). */
+:root {
+  color-scheme: light;
+
+  --blue: #5aafe0;
+  --blue-hover: #43a2d9;
+  --blue-ink: #0e3a5c;
+  --blue-600: #1b6e9e;
+  --blue-tint: #eaf5fc;
+
+  --bg: #f4f6f7;
+  --card: #ffffff;
+  --hover: #f0f2f3;
+
+  --ink: #000000;
+  --ink-2: #666666;
+  --ink-3: #949a9d;
+
+  --line: #dcdcdc;
+  --line-2: #e8e8e8;
+
+  --ok-bg: #e3f3e6;    --ok-ink: #1c6b2e;
+  --warn-bg: #fdf0da;  --warn-ink: #8a5a00;
+  --err-bg: #fbe4e4;   --err-ink: #b3261e;
+  --mute-bg: #eceff0;  --mute-ink: #5a6266;
+
+  --r: 4px;
+  --r-sm: 3px;
+  --sh: 0 1px 4px rgba(0, 0, 0, 0.1), 0 4px 14px rgba(0, 0, 0, 0.06);
+  --ease: cubic-bezier(0.25, 0.6, 0.3, 1);
+}
+
 * { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, sans-serif; background: #f5f5f4; color: #1c1917; }
-main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-h1 { font-size: 20px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
-th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #e7e5e4; font-size: 14px; vertical-align: top; }
-th { background: #fafaf9; font-weight: 600; }
-input[type="datetime-local"], textarea { width: 100%; border: 1px solid #d6d3d1; border-radius: 6px; padding: 6px; font: inherit; font-size: 13px; }
-textarea { min-height: 60px; resize: vertical; }
-button { border: none; border-radius: 6px; padding: 8px 14px; font: inherit; cursor: pointer; background: #1c1917; color: #fff; }
-button.secondary { background: #e7e5e4; color: #1c1917; }
-button:disabled { opacity: 0.5; cursor: default; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-.badge.pending { background: #fef3c7; }
-.badge.published, .badge.drafted { background: #dcfce7; }
-.badge.error { background: #fee2e2; }
-.badge.skipped { background: #e7e5e4; }
-.toolbar { display: flex; gap: 8px; align-items: center; margin: 16px 0; }
-.msg { font-size: 13px; color: #57534e; }
-.login { display: grid; place-items: center; min-height: 100vh; }
-.login form { background: #fff; padding: 32px; border-radius: 12px; display: grid; gap: 12px; width: 320px; }
-.login input { border: 1px solid #d6d3d1; border-radius: 6px; padding: 10px; font: inherit; }
-main { max-width: 1400px; }
-img.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; display: block; cursor: pointer; background: #e7e5e4; }
-button.play { background: none; color: #1c1917; padding: 0 6px; font-size: 13px; }
-textarea.small { min-height: 40px; font-size: 12px; min-width: 110px; }
-.nowrap { white-space: nowrap; }
-.sep { width: 12px; }
-td.drag { cursor: grab; color: #a8a29e; font-size: 16px; user-select: none; width: 24px; }
-td.drag:active { cursor: grabbing; }
-tr.dragover td { border-top: 2px solid #1c1917; }
-td.drag { vertical-align: middle; text-align: center; }
-tbody tr { cursor: grab; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+main { max-width: 1400px; margin: 0 auto; padding: 28px 20px 64px; overflow-x: auto; }
+
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 4px; }
+
+:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; border-radius: 2px; }
+
+/* ---------- Tabelle: flache SBB-Liste, nur waagrechte Haarlinien ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+th, td {
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  vertical-align: top;
+}
+th {
+  background: var(--card);
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+td { font-variant-numeric: tabular-nums; }
+tbody tr { cursor: grab; transition: background 0.16s var(--ease); }
+tbody tr:hover td { background: var(--hover); }
 tbody tr:active { cursor: grabbing; }
+tbody tr:last-child td { border-bottom: none; }
 tbody td:has(input), tbody td:has(textarea), tbody td:has(button) { cursor: auto; }
-a.link { font-size: 13px; color: #1c1917; text-decoration: underline; }
-main.legal { max-width: 720px; }
-main.legal h1 { font-size: 24px; margin-bottom: 4px; }
-main.legal h2 { font-size: 15px; margin-top: 24px; }
-main.legal p, main.legal li { font-size: 14px; line-height: 1.6; }
+
+td.drag {
+  cursor: grab;
+  color: var(--ink-3);
+  font-size: 16px;
+  user-select: none;
+  width: 28px;
+  vertical-align: middle;
+  text-align: center;
+}
+td.drag:active { cursor: grabbing; }
+tr.dragover td { border-top: 2px solid var(--blue-600); }
+
+/* Statuszeile "IG [chip] [Retry]" bleibt eine Zeile, sonst bricht die Spalte um */
+td div:has(.badge) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  margin-bottom: 3px;
+}
+td div:has(.badge):last-child { margin-bottom: 0; }
+
+/* ---------- Formularfelder ---------- */
+input[type="datetime-local"],
+input[type="number"],
+input[type="password"],
+input[type="text"],
+textarea {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  transition: border-color 0.16s var(--ease);
+}
+input[type="datetime-local"], input[type="number"] { font-variant-numeric: tabular-nums; }
+/* schmaler in der Tabelle - das Feld hat eine grosse Eigenbreite */
+td input[type="datetime-local"] { font-size: 14px; padding: 8px; }
+
+/* Datumsfeld + Reset-Button in einer Zeile */
+.datecell { display: flex; align-items: center; gap: 4px; }
+.datecell input { flex: 1; width: auto; min-width: 0; }
+input:hover, textarea:hover { border-color: var(--ink-3); }
+input:focus, textarea:focus {
+  outline: 2px solid var(--blue-600);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+textarea { min-height: 60px; resize: vertical; line-height: 1.4; }
+/* Caption braucht Breite, sonst frisst sie die schmalste Spalte der Tabelle */
+td textarea:not(.small) { min-width: 180px; }
+textarea.small { min-height: 40px; font-size: 14px; min-width: 94px; }
+input[type="checkbox"] { accent-color: var(--blue-600); width: 15px; height: 15px; }
+
+/* ---------- Buttons ---------- */
+button {
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 9px 16px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--blue);
+  color: var(--blue-ink);
+  transition: background 0.16s var(--ease), border-color 0.16s var(--ease);
+}
+button:hover:not(:disabled) { background: var(--blue-hover); }
+button.secondary {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 8px 15px;
+}
+button.secondary:hover:not(:disabled) { background: var(--hover); border-color: var(--ink); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.play {
+  background: none;
+  color: var(--ink);
+  padding: 2px 7px;
+  font-size: 15px;
+  font-weight: 400;
+  border-radius: var(--r-sm);
+}
+button.play:hover:not(:disabled) { background: var(--hover); }
+
+/* ---------- Status-Chips: semantische Farben, flach wie SBB-Piktogramme ---------- */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  background: var(--mute-bg);
+  color: var(--mute-ink);
+}
+.badge:empty { display: none; }
+.badge.pending { background: var(--warn-bg); color: var(--warn-ink); }
+.badge.published, .badge.drafted { background: var(--ok-bg); color: var(--ok-ink); }
+.badge.error { background: var(--err-bg); color: var(--err-ink); }
+.badge.skipped { background: var(--mute-bg); color: var(--mute-ink); }
+
+/* ---------- Toolbar ---------- */
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
+.sep { width: 1px; height: 26px; flex: none; background: var(--line); }
+.msg { font-size: 15px; color: var(--ink-2); }
+
+a.link { font-size: 15px; color: var(--blue-600); text-decoration: underline; text-underline-offset: 3px; }
+a.link:hover { color: var(--blue-ink); }
+
+/* ---------- Video-Thumbnail ---------- */
+img.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  display: block;
+  cursor: pointer;
+  background: var(--line-2);
+  transition: box-shadow 0.16s var(--ease);
+}
+img.thumb:hover { box-shadow: 0 0 0 2px var(--blue-600); }
+
+.nowrap { white-space: nowrap; }
+
+/* ---------- Login ---------- */
+.login { display: grid; place-items: center; min-height: 100vh; background: var(--bg); }
+.login form {
+  background: var(--card);
+  padding: 36px 32px;
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  display: grid;
+  gap: 14px;
+  width: 340px;
+}
+.login h1 { font-size: 22px; margin-bottom: 6px; }
+.login input { font-size: 17px; padding: 10px 12px; }
+
+/* ---------- Rechtstexte ---------- */
+main.legal {
+  max-width: 780px;
+  margin: 32px auto 64px;
+  padding: 44px 48px;
+  background: var(--card);
+  border-radius: var(--r);
+}
+main.legal h1 { font-size: 30px; margin-bottom: 4px; }
+main.legal h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 32px 0 8px; }
+main.legal p, main.legal li { font-size: 17px; line-height: 1.65; }
+main.legal em { font-style: normal; font-size: 15px; color: var(--ink-2); }
+main.legal ul { padding-left: 20px; margin: 12px 0; }
+main.legal li { margin-bottom: 10px; }
+main.legal li::marker { color: var(--blue-600); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; }
+}

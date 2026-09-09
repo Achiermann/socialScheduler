@@ -79,6 +79,28 @@ export default function Dashboard() {
     } else setMsg("Fehler beim Speichern.");
   }
 
+  // Setzt das Datum sofort zurueck - nicht ueber den Speichern-Flow
+  async function resetDate(id) {
+    setBusy(true);
+    const res = await fetch("/api/posts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, scheduled_at: null }),
+    });
+    setBusy(false);
+    if (!res.ok) { setMsg("Fehler beim Zurücksetzen."); return; }
+    setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, scheduled_at: null } : p)));
+    // Ein offener Datums-Edit wuerde beim Speichern sonst das alte Datum zurueckschreiben
+    setDirty((d) => {
+      if (!d[id]) return d;
+      const { scheduled_at, ...rest } = d[id];
+      const n = { ...d };
+      if (Object.keys(rest).length) n[id] = rest; else delete n[id];
+      return n;
+    });
+    setMsg("Datum zurückgesetzt.");
+  }
+
   async function sync() {
     setBusy(true);
     setMsg("Synchronisiere mit Dropbox …");
@@ -183,11 +205,21 @@ export default function Dashboard() {
                 {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
               </td>
               <td>
-                <input
-                  type="datetime-local"
-                  value={toLocal(p.scheduled_at)}
-                  onChange={(e) => edit(p.id, { scheduled_at: toIso(e.target.value) })}
-                />
+                <div className="datecell">
+                  <input
+                    type="datetime-local"
+                    value={toLocal(p.scheduled_at)}
+                    onChange={(e) => edit(p.id, { scheduled_at: toIso(e.target.value) })}
+                  />
+                  <button
+                    className="play"
+                    title="Datum zurücksetzen"
+                    disabled={!p.scheduled_at || busy}
+                    onClick={() => resetDate(p.id)}
+                  >
+                    &#8634;
+                  </button>
+                </div>
               </td>
               <td>
                 <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} />
