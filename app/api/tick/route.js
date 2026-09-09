@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
-import { temporaryLink, fileSize } from "@/lib/dropbox";
+import { temporaryLink, fileSize, moveToUploaded, ARCHIVE_FOLDER } from "@/lib/dropbox";
 import { currentToken as igToken, publishReel } from "@/lib/instagram";
 import { currentToken as ttToken, uploadToInbox } from "@/lib/tiktok";
 import { currentToken as ytToken, uploadShort } from "@/lib/youtube";
@@ -31,6 +31,26 @@ export async function POST(req) {
     return data?.[0] || null;
   }
 
+  // Schiebt das Video nach /Uploaded, sobald ALLE aktivierten Plattformen fertig
+  // sind. Fehler hier duerfen den erfolgreichen Post nie kippen.
+  async function maybeArchive(postId) {
+    try {
+      const { data: p } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
+      if (!p?.dropbox_path) return;
+      if (p.dropbox_path.toLowerCase().includes(`/${ARCHIVE_FOLDER.toLowerCase()}/`)) return;
+
+      const done = (enabled, status, terminal) => !enabled || terminal.includes(status);
+      if (!done(p.post_ig, p.ig_status, ["published", "skipped"])) return;
+      if (!done(p.post_tt, p.tt_status, ["drafted", "skipped"])) return;
+      if (!done(p.post_yt, p.yt_status, ["published", "skipped"])) return;
+
+      const newPath = await moveToUploaded(p.dropbox_path, p.filename);
+      await supabase.from("posts").update({ dropbox_path: newPath, updated_at: now() }).eq("id", p.id);
+    } catch (e) {
+      console.error("Archivieren fehlgeschlagen:", e.message);
+    }
+  }
+
   async function fail(post, col, e) {
     await supabase
       .from("posts")
@@ -51,6 +71,7 @@ export async function POST(req) {
           .from("posts")
           .update({ ig_status: "published", ig_media_id: mediaId, last_error: null, updated_at: now() })
           .eq("id", igPost.id);
+        await maybeArchive(igPost.id);
         return NextResponse.json({ done: "instagram", filename: igPost.filename });
       } catch (e) {
         return await fail(igPost, "ig_status", e);
@@ -69,6 +90,7 @@ export async function POST(req) {
           .from("posts")
           .update({ tt_status: "drafted", tt_publish_id: publishId, last_error: null, updated_at: now() })
           .eq("id", ttPost.id);
+        await maybeArchive(ttPost.id);
         return NextResponse.json({ done: "tiktok", filename: ttPost.filename });
       } catch (e) {
         return await fail(ttPost, "tt_status", e);
@@ -87,6 +109,7 @@ export async function POST(req) {
           .from("posts")
           .update({ yt_status: "published", yt_video_id: videoId, last_error: null, updated_at: now() })
           .eq("id", ytPost.id);
+        await maybeArchive(ytPost.id);
         return NextResponse.json({ done: "youtube", filename: ytPost.filename });
       } catch (e) {
         return await fail(ytPost, "yt_status", e);
