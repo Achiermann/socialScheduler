@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
-import { temporaryLink } from "@/lib/dropbox";
+import { temporaryLink, fileSize } from "@/lib/dropbox";
 import { currentToken as igToken, publishReel } from "@/lib/instagram";
 import { currentToken as ttToken, uploadToInbox } from "@/lib/tiktok";
 import { currentToken as ytToken, uploadShort } from "@/lib/youtube";
@@ -63,7 +63,8 @@ export async function POST(req) {
       try {
         const token = await ttToken(supabase);
         const videoUrl = await temporaryLink(ttPost.dropbox_path);
-        const publishId = await uploadToInbox(token, videoUrl, ttPost.filename);
+        const size = await fileSize(ttPost.dropbox_path);
+        const publishId = await uploadToInbox(token, videoUrl, ttPost.filename, size);
         await supabase
           .from("posts")
           .update({ tt_status: "drafted", tt_publish_id: publishId, last_error: null, updated_at: now() })
@@ -80,7 +81,8 @@ export async function POST(req) {
       try {
         const token = await ytToken(supabase);
         const videoUrl = await temporaryLink(ytPost.dropbox_path);
-        const videoId = await uploadShort(token, videoUrl, ytPost.filename, ytPost.caption || "");
+        const size = await fileSize(ytPost.dropbox_path);
+        const videoId = await uploadShort(token, videoUrl, ytPost.filename, ytPost.caption || "", size);
         await supabase
           .from("posts")
           .update({ yt_status: "published", yt_video_id: videoId, last_error: null, updated_at: now() })
