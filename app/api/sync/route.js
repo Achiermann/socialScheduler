@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
-import { listVideos, videoDuration } from "@/lib/dropbox";
+import { listVideos, videoDuration, folderPath } from "@/lib/dropbox";
 
 export const maxDuration = 300;
 
@@ -54,6 +54,15 @@ export async function POST() {
 
     return NextResponse.json({ total: videos.length, added: fresh.length, moved, durations });
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    // Diagnose: zeigt, womit diese Umgebung tatsaechlich arbeitet
+    return NextResponse.json({
+      error: e.message,
+      debug: {
+        folderPath: JSON.stringify(folderPath()),
+        envRaw: JSON.stringify(process.env.DROPBOX_FOLDER_PATH ?? null),
+        appKey: (process.env.DROPBOX_APP_KEY || "").slice(0, 8),
+        tokenStart: (process.env.DROPBOX_REFRESH_TOKEN || "").slice(0, 8),
+      },
+    }, { status: 500 });
   }
 }

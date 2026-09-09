@@ -113,7 +113,7 @@ export default function Dashboard() {
     setBusy(false);
     setMsg(res.ok
       ? `${data.total} Videos, ${data.added} neu, ${data.durations} Längen ergänzt.`
-      : `Fehler: ${data.error}`);
+      : `Fehler: ${data.error}${data.debug ? " | " + JSON.stringify(data.debug) : ""}`);
     load();
   }
 
