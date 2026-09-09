@@ -8,7 +8,15 @@ async function sha256(text) {
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
   // Login-Seite, Login-API und Cron-Worker sind ausgenommen (Worker prueft eigenes Secret)
-  if (pathname.startsWith("/login") || pathname.startsWith("/api/login") || pathname.startsWith("/api/tick")) {
+  // Oeffentlich: Login, Cron-Worker (prueft eigenes Secret) und die von den
+  // Plattform-Reviews geforderten Rechtstexte
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/login") ||
+    pathname.startsWith("/api/tick") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/privacy")
+  ) {
     return NextResponse.next();
   }
   const cookie = req.cookies.get("auth")?.value;

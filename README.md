@@ -69,14 +69,49 @@ Web-Dashboard, Daten in Supabase, Hosting auf Vercel, Cron via GitHub Actions.
 2. Der Workflow `.github/workflows/cron.yml` ruft den Worker alle 15 Min auf.
    Manueller Test: Actions-Tab -> "scheduler-tick" -> "Run workflow".
 
-## Spaeter
+## Phase 4 - TikTok (Upload in die Drafts)
 
-- **TikTok**: Upload-to-Inbox (Video landet in den Drafts der App).
-- **YouTube**: Data-API-Audit beantragen, danach vollautomatischer Upload.
+Ohne bestandenes TikTok-Audit darf die API nicht oeffentlich posten. Deshalb laedt
+das System das Video automatisch in die **Inbox/Drafts** des Accounts; du bekommst
+in der TikTok-App eine Benachrichtigung und veroeffentlichst mit zwei Taps.
+
+1. Auf https://developers.tiktok.com mit dem TikTok-Account einloggen und als
+   Developer registrieren.
+2. **Manage apps -> Connect an app**: App anlegen. Bei den Angaben:
+   - Website URL: `https://social-scheduler.studio-sidefin.ch`
+   - Terms of Service URL: `https://social-scheduler.studio-sidefin.ch/terms`
+   - Privacy Policy URL: `https://social-scheduler.studio-sidefin.ch/privacy`
+3. Produkte hinzufuegen: **Login Kit** und **Content Posting API**.
+   - Login Kit -> Redirect URI: `https://social-scheduler.studio-sidefin.ch/api/tiktok/callback`
+   - Content Posting API -> Scope **video.upload** aktivieren
+     (`video.publish` waere Direct Post und braucht das Audit - nicht noetig).
+4. **Sandbox** anlegen und den eigenen TikTok-Account als Target User hinzufuegen
+   (noetig, solange die App nicht auditiert ist).
+5. Client key + Client secret kopieren -> `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`
+   (lokal in `.env.local`, produktiv in den Vercel Env-Variablen).
+   Ausserdem `PUBLIC_APP_URL` auf die oeffentliche Domain setzen.
+6. Migration `supabase/migration_04_tiktok.sql` im Supabase SQL-Editor ausfuehren.
+7. Im Dashboard auf **TikTok verbinden** klicken und die Freigabe erteilen.
+   Der OAuth-Flow muss ueber die oeffentliche https-Domain laufen - nicht ueber
+   localhost, das laesst TikTok nicht zu.
+
+Danach laedt der Cron faellige Posts automatisch in die Drafts (Status `drafted`).
+Limits: max. 5 offene Draft-Uploads pro 24h, Videos MP4/MOV/WebM, H.264, 3s-10min.
+
+## Phase 5 - YouTube Shorts (spaeter)
+
+Google-Cloud-Projekt + YouTube Data API v3 + OAuth einrichten und das kostenlose
+API-Audit beantragen. Ohne Audit werden Uploads auf `privat` gesperrt.
+
+## Accountwechsel (Livegang)
+
+Siehe `Social-Scheduler_ToDo_Livegang.pdf` im Projektordner. Kurzfassung: neue
+Tokens in Vercel eintragen und die gespeicherten Tokens in `scheduler.settings`
+loeschen, damit die Automatik sie neu holt.
 
 ## Limits (alle unkritisch bei 1 Post / 2 Tage)
 
-- Instagram: max. 25 API-Posts pro 24h und Account, Reels max. 15 Min, MP4.
+- Instagram: max. 25 API-Posts pro 24h und Account, Reels max. 15 Min, MP4/MOV.
+- TikTok: max. 5 offene Draft-Uploads pro 24h.
 - Dropbox-Templinks: 4h gueltig (werden pro Post frisch geholt).
-- GitHub Actions free: 2000 Min/Monat (ein Tick braucht Sekunden).
-# socialScheduler
+- Cron laeuft ueber Supabase pg_cron (alle 15 Min), nicht mehr ueber GitHub Actions.
