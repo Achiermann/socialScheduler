@@ -1,31 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { spreadScenes, isFixed } from "@/lib/spread";
+import { PhoneSvg, PhonePreview } from "./PhonePreview";
 
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
-}
-
-// Retro-Fernseher in Linien. Klein als Icon, gross als Rahmen fuer das Video.
-// Bildschirm im viewBox: x 14-88, y 30-84 (Prozentwerte in .tv-screen)
-function TvSvg({ big = false, ...rest }) {
-  return (
-    // Gross: Linienstaerke in Bildschirm-Pixeln (non-scaling-stroke, siehe CSS)
-    <svg viewBox="0 0 120 100" fill="none" stroke="var(--ink)" strokeWidth={big ? 3.5 : 4}
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>
-      <path d="M60 22L42 5M60 22L78 5" />
-      <rect x="6" y="22" width="108" height="70" rx="9" fill={big ? "var(--card)" : "none"} />
-      <rect x="14" y="30" width="74" height="54" rx="6" fill={big ? "#000" : "none"} />
-      <circle cx="101" cy="42" r="5" />
-      <circle cx="101" cy="58" r="5" />
-      <path d="M95 72h12M95 77h12M95 82h12" strokeWidth={big ? 2.5 : 3} />
-      <path d="M22 92l-5 6M98 92l5 6" />
-    </svg>
-  );
 }
 
 // Slot-Datum in Lokalzeit: "12.10.26" + "10:00"
@@ -69,14 +52,8 @@ export default function Dashboard() {
   const [showPast, setShowPast] = useState(false); // Planer: vergangene Slots einblenden
   const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
-  const [tvPost, setTvPost] = useState(null); // Post, dessen Video gross im Fernseher laeuft
-
-  useEffect(() => {
-    if (!tvPost) return;
-    const onKey = (e) => { if (e.key === "Escape") setTvPost(null); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [tvPost]);
+  const [phonePost, setPhonePost] = useState(null); // Post in der Instagram-Vorschau
+  const closePhone = useCallback(() => setPhonePost(null), []);
   // Dropbox-Templinks gelten 4h; beim Hover vorgeladen, damit der Klick sofort abspielt
   const videoLinks = useRef({});
 
@@ -337,13 +314,13 @@ export default function Dashboard() {
       <td className="videocell">
         {p.filename}
         <button
-          className="tv-btn"
-          title="Im Fernseher abspielen"
-          aria-label="Im Fernseher abspielen"
+          className="phone-btn"
+          title="Vorschau wie auf Instagram"
+          aria-label="Vorschau wie auf Instagram"
           onMouseEnter={() => prefetchLink(p.dropbox_path)}
-          onClick={() => { setPlayingId(null); setTvPost(p); }}
+          onClick={() => { setPlayingId(null); setPhonePost(p); }}
         >
-          <TvSvg width="30" height="25" />
+          <PhoneSvg width="17" height="34" />
         </button>
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
@@ -601,21 +578,13 @@ export default function Dashboard() {
           />
         </div>
       )}
-      {tvPost && (
-        // Klick ausserhalb des Fernsehers schliesst ihn
-        <div className="tv-overlay" onClick={() => setTvPost(null)}>
-          <div className="tv-big" role="dialog" aria-label={tvPost.filename} onClick={(e) => e.stopPropagation()}>
-            <TvSvg big />
-            <video
-              className="tv-screen"
-              src={videoSrc(tvPost.dropbox_path)}
-              poster={`/api/thumb?path=${encodeURIComponent(tvPost.dropbox_path)}`}
-              autoPlay
-              controls
-              playsInline
-            />
-          </div>
-        </div>
+      {phonePost && (
+        <PhonePreview
+          // aktuelle Caption anzeigen, auch wenn sie seit dem Oeffnen bearbeitet wurde
+          post={posts.find((p) => p.id === phonePost.id) || phonePost}
+          videoSrc={videoSrc(phonePost.dropbox_path)}
+          onClose={closePhone}
+        />
       )}
     </main>
   );

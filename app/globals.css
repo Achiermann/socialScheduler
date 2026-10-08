@@ -418,36 +418,168 @@ button.linkbtn {
 }
 button.linkbtn:hover:not(:disabled) { background: none; color: var(--blue-ink); }
 
-/* ---------- Fernseher ---------- */
-button.tv-btn { display: block; margin-top: 6px; background: none; padding: 0; line-height: 0; }
-button.tv-btn:hover:not(:disabled) { background: none; opacity: 0.6; }
-.tv-overlay {
+/* ---------- Smartphone / Instagram-Vorschau ---------- */
+button.phone-btn { display: block; margin-top: 6px; background: none; padding: 0; line-height: 0; }
+button.phone-btn:hover:not(:disabled) { background: none; opacity: 0.6; }
+.phone-svg * { vector-effect: non-scaling-stroke; stroke-width: 1.6px; }
+.phone-svg.big * { stroke-width: 3px; }
+.phone-overlay {
   position: fixed;
   inset: 0;
   z-index: 30;
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.55);
-  animation: tv-fade 0.15s ease-out;
+  animation: phone-fade 0.15s ease-out;
 }
-.tv-big {
+.phone-big {
   position: relative;
-  width: min(92vw, 105vh);
-  aspect-ratio: 120 / 100;
-  animation: tv-pop 0.2s cubic-bezier(0.25, 0.6, 0.3, 1);
+  height: min(92vh, 184vw);
+  aspect-ratio: 100 / 200;
+  animation: phone-pop 0.2s cubic-bezier(0.25, 0.6, 0.3, 1);
 }
-.tv-big > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.tv-big > svg * { vector-effect: non-scaling-stroke; }
-/* deckt genau den Bildschirm im SVG ab (x 14-88, y 30-84 von 120x100) */
-.tv-screen {
+.phone-big > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+@keyframes phone-fade { from { opacity: 0; } }
+@keyframes phone-pop { from { transform: scale(0.9); opacity: 0; } }
+
+/* deckt genau den Bildschirm im SVG ab (x 7-93, y 7-193 von 100x200) */
+.phone-screen {
   position: absolute;
-  left: 11.67%;
-  top: 30%;
-  width: 61.67%;
-  height: 54%;
-  object-fit: contain;
+  left: 7%;
+  top: 3.5%;
+  width: 86%;
+  height: 93%;
+  border-radius: 14% / 6.5%;
+  overflow: hidden;
   background: #000;
-  border-radius: 4.5% / 6%;
+  container-type: size;
 }
-@keyframes tv-fade { from { opacity: 0; } }
-@keyframes tv-pop { from { transform: scale(0.9); opacity: 0; } }
+
+/* Reels-Oberflaeche; Groessen in cqw, damit sie mit dem Smartphone skalieren */
+.ig {
+  position: absolute;
+  inset: 0;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 3.7cqw;
+  line-height: 1.3;
+  --nav: 13cqw;
+}
+.ig-video {
+  position: absolute;
+  inset: 0 0 var(--nav) 0;
+  width: 100%;
+  height: calc(100% - var(--nav));
+  object-fit: cover;
+  cursor: pointer;
+}
+.ig-shade {
+  position: absolute;
+  inset: auto 0 var(--nav) 0;
+  height: 40%;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+}
+.ig-paused {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 16cqw;
+  height: 16cqw;
+  transform: translate(-50%, -50%);
+  padding: 3cqw;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  line-height: 0;
+}
+.ig-paused:hover:not(:disabled) { background: rgba(0, 0, 0, 0.5); }
+.ig-status {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10cqw;
+  padding: 0 8cqw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 3.9cqw;
+  pointer-events: none;
+}
+.ig-island { width: 26cqw; height: 7cqw; border-radius: 4cqw; background: #000; }
+.ig-battery { width: 6.5cqw; height: 3.2cqw; border: 0.3cqw solid #fff; border-radius: 1cqw; box-shadow: inset -1.5cqw 0 0 0 #000, inset 0 0 0 10cqw #fff; }
+.ig-top {
+  position: absolute;
+  inset: 11cqw 4cqw auto 4cqw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.ig-title { font-size: 6cqw; font-weight: 700; display: inline-flex; align-items: center; gap: 1cqw; }
+.ig-actions {
+  position: absolute;
+  right: 3cqw;
+  bottom: calc(var(--nav) + 4cqw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5cqw;
+  pointer-events: none;
+}
+.ig-actions svg { filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.4)); }
+.ig-audio-cover {
+  width: 7cqw;
+  height: 7cqw;
+  border: 0.5cqw solid #fff;
+  border-radius: 1.6cqw;
+  background: #444;
+  overflow: hidden;
+}
+.ig-audio-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-meta {
+  position: absolute;
+  left: 3.5cqw;
+  right: 16cqw;
+  bottom: calc(var(--nav) + 4cqw);
+  display: grid;
+  gap: 2cqw;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+}
+.ig-user { display: flex; align-items: center; gap: 2.5cqw; font-size: 3.7cqw; }
+.ig-avatar { width: 8cqw; height: 8cqw; border-radius: 50%; object-fit: cover; background: #666; flex: none; }
+.ig-follow {
+  border: 0.3cqw solid rgba(255, 255, 255, 0.85);
+  border-radius: 2cqw;
+  padding: 0.6cqw 2.5cqw;
+  font-weight: 600;
+  font-size: 3.4cqw;
+}
+.ig-caption {
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ig-caption.open { -webkit-line-clamp: unset; max-height: 45cqh; overflow-y: auto; }
+.ig-audio { display: flex; align-items: center; gap: 1.5cqw; font-size: 3.4cqw; }
+.ig-progress { position: absolute; inset: auto 0 var(--nav) 0; height: 0.6cqw; background: rgba(255, 255, 255, 0.25); }
+.ig-progress span { display: block; height: 100%; background: #fff; }
+.ig-nav {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--nav);
+  padding: 0 6cqw 2.5cqw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #000;
+}
+.ig-nav-avatar { width: 6.5cqw; height: 6.5cqw; border-radius: 50%; object-fit: cover; background: #666; }
+/* Symbolgroessen wie in der App (relativ zur Bildschirmbreite) */
+.ig-actions > svg { width: 7.4cqw; height: 7.4cqw; }
+.ig-actions > svg:first-child { width: 8cqw; height: 8cqw; }
+.ig-top > svg { width: 7cqw; height: 7cqw; }
+.ig-nav > svg { width: 7cqw; height: 7cqw; }
