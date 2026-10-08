@@ -138,7 +138,12 @@ input:focus, textarea:focus {
   outline-offset: -1px;
   border-color: transparent;
 }
-textarea { min-height: 60px; resize: vertical; line-height: 1.4; }
+textarea { min-height: 60px; resize: none; line-height: 1.4; }
+/* Eingabefelder fuellen die Zeile: gleicher Abstand oben und unten (= Zell-Padding) */
+tbody td { padding-top: 12px; padding-bottom: 12px; }
+tbody td textarea, tbody td textarea.small { display: block; height: 100px; min-height: 0; }
+/* Szene ein Drittel schmaler als die automatische Breite (244px) */
+td.scene { width: 163px; }
 /* Caption braucht Breite, sonst frisst sie die schmalste Spalte der Tabelle */
 td textarea:not(.small) { min-width: 180px; }
 textarea.small { min-height: 40px; font-size: 14px; min-width: 94px; }

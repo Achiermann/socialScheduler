@@ -219,7 +219,7 @@ export default function Dashboard() {
         {p.filename}
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
-      <td>
+      <td className="scene">
         <textarea className="small" value={p.scene || ""} onChange={(e) => edit(p.id, { scene: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
     </>
