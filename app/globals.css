@@ -105,7 +105,7 @@ td div:has(.badge) {
 td div:has(.badge):last-child { margin-bottom: 0; }
 
 /* ---------- Formularfelder ---------- */
-input[type="datetime-local"],
+input[type="time"],
 input[type="number"],
 input[type="password"],
 input[type="text"],
@@ -120,13 +120,9 @@ textarea {
   color: var(--ink);
   transition: border-color 0.16s var(--ease);
 }
-input[type="datetime-local"], input[type="number"] { font-variant-numeric: tabular-nums; }
-/* schmaler in der Tabelle - das Feld hat eine grosse Eigenbreite */
-td input[type="datetime-local"] { font-size: 14px; padding: 8px; }
+input[type="time"], input[type="number"] { font-variant-numeric: tabular-nums; }
 
-/* Datumsfeld + Reset-Button in einer Zeile */
-.datecell { display: flex; align-items: center; gap: 4px; }
-.datecell input { flex: 1; width: auto; min-width: 0; }
+td.slot { font-weight: 600; }
 input:hover, textarea:hover { border-color: var(--ink-3); }
 input:focus, textarea:focus {
   outline: 2px solid var(--blue-600);

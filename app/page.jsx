@@ -5,19 +5,17 @@ function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
-// datetime-local arbeitet in Lokalzeit, DB speichert UTC
-function toLocal(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+// Slot-Datum in Lokalzeit, z.B. "Mo 12.10.26, 10:00"
+function fmtSlot(iso) {
+  if (!iso) return "–";
+  return new Date(iso).toLocaleString("de-CH", {
+    weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
 }
+const started = (p) => [p.ig_status, p.tt_status, p.yt_status].some((s) => s && s !== "pending");
 // Natuerliche Sortierung: jede Zahl im Namen zaehlt numerisch (0052_01 < 0052_02 < 0053_01)
 function byNumber(a, b) {
   return a.filename.localeCompare(b.filename, undefined, { numeric: true, sensitivity: "base" });
-}
-function toIso(local) {
-  return local ? new Date(local).toISOString() : null;
 }
 
 export default function Dashboard() {
@@ -25,8 +23,7 @@ export default function Dashboard() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState({});
-  const [apStart, setApStart] = useState("");
-  const [apDays, setApDays] = useState(2);
+  const [plan, setPlan] = useState({ time: "10:00", intervalDays: 2 }); // Slot-Einstellungen
   const dragId = useRef(null);
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
@@ -74,20 +71,53 @@ export default function Dashboard() {
     const toIdx = list.findIndex((p) => p.id === targetId);
     const [moved] = list.splice(fromIdx, 1);
     list.splice(toIdx, 0, moved);
-    setPosts(list);
+    // Daten bleiben am Slot (Position), nur die Videos wandern - sofort anzeigen,
+    // der Server rechnet anschliessend verbindlich nach
+    setPosts(list.map((p, i) => (
+      !started(p) && !started(posts[i]) ? { ...p, scheduled_at: posts[i].scheduled_at } : p
+    )));
     const res = await fetch("/api/reorder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: list.map((p) => p.id) }),
     });
     setMsg(res.ok ? "Reihenfolge gespeichert." : "Fehler beim Speichern der Reihenfolge.");
+    refreshDates();
+  }
+
+  // Holt nur die Slot-Daten neu, ohne ungespeicherte Eingaben zu ueberschreiben
+  async function refreshDates() {
+    const res = await fetch("/api/posts");
+    if (!res.ok) return;
+    const byId = new Map((await res.json()).map((p) => [p.id, p.scheduled_at]));
+    setPosts((ps) => ps.map((p) => (byId.has(p.id) ? { ...p, scheduled_at: byId.get(p.id) } : p)));
+  }
+
+  async function savePlan() {
+    setBusy(true);
+    const res = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(plan),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) { setMsg(`Fehler: ${data.error}`); return; }
+    setPlan({ time: data.time, intervalDays: data.intervalDays });
+    setMsg(`Slots aktualisiert (${data.updated} Daten geändert).`);
+    refreshDates();
   }
 
   async function load() {
     const res = await fetch("/api/posts");
     if (res.ok) setPosts(await res.json());
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).then((d) => {
+      if (d) setPlan({ time: d.time, intervalDays: d.intervalDays });
+    });
+  }, []);
 
   // Rueckmeldung vom TikTok-OAuth-Callback (?tiktok=...) anzeigen
   useEffect(() => {
@@ -120,28 +150,6 @@ export default function Dashboard() {
     } else setMsg("Fehler beim Speichern.");
   }
 
-  // Setzt das Datum sofort zurueck - nicht ueber den Speichern-Flow
-  async function resetDate(id) {
-    setBusy(true);
-    const res = await fetch("/api/posts", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, scheduled_at: null }),
-    });
-    setBusy(false);
-    if (!res.ok) { setMsg("Fehler beim Zurücksetzen."); return; }
-    setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, scheduled_at: null } : p)));
-    // Ein offener Datums-Edit wuerde beim Speichern sonst das alte Datum zurueckschreiben
-    setDirty((d) => {
-      if (!d[id]) return d;
-      const { scheduled_at, ...rest } = d[id];
-      const n = { ...d };
-      if (Object.keys(rest).length) n[id] = rest; else delete n[id];
-      return n;
-    });
-    setMsg("Datum zurückgesetzt.");
-  }
-
   async function sync() {
     setBusy(true);
     setMsg("Synchronisiere mit Dropbox …");
@@ -151,20 +159,6 @@ export default function Dashboard() {
     setMsg(res.ok
       ? `${data.total} Videos, ${data.added} neu, ${data.durations} Längen ergänzt.`
       : `Fehler: ${data.error}${data.debug ? " | " + JSON.stringify(data.debug) : ""}`);
-    load();
-  }
-
-  async function autoplan() {
-    if (!apStart) { setMsg("Startdatum für Auto-Plan wählen."); return; }
-    setBusy(true);
-    const res = await fetch("/api/autoplan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start: toIso(apStart), intervalDays: apDays }),
-    });
-    const data = await res.json();
-    setBusy(false);
-    setMsg(res.ok ? `${data.planned} Posts eingeplant.` : `Fehler: ${data.error}`);
     load();
   }
 
@@ -249,8 +243,6 @@ export default function Dashboard() {
     </td>
   );
 
-  const unscheduled = posts.filter((p) => !p.scheduled_at).length;
-
   return (
     <main>
       <header className="topbar">
@@ -277,17 +269,17 @@ export default function Dashboard() {
                 <button onClick={sync} disabled={busy}>Dropbox-Sync</button>
               </section>
               <section>
-                <h3>Auto-Plan</h3>
+                <h3>Datums-Slots</h3>
                 <div className="row">
-                  <input type="datetime-local" value={apStart} onChange={(e) => setApStart(e.target.value)} />
+                  <span className="msg">Uhrzeit</span>
+                  <input type="time" value={plan.time} onChange={(e) => setPlan({ ...plan, time: e.target.value })} style={{ width: 110 }} />
                 </div>
                 <div className="row">
                   <span className="msg">alle</span>
-                  <input type="number" min="1" value={apDays} onChange={(e) => setApDays(e.target.value)} style={{ width: 64 }} />
+                  <input type="number" min="1" value={plan.intervalDays}
+                    onChange={(e) => setPlan({ ...plan, intervalDays: e.target.value })} style={{ width: 64 }} />
                   <span className="msg">Tage</span>
-                  <button className="secondary" onClick={autoplan} disabled={busy || !unscheduled}>
-                    Auto-Plan ({unscheduled} offen)
-                  </button>
+                  <button className="secondary" onClick={savePlan} disabled={busy}>Übernehmen</button>
                 </div>
               </section>
               <section>
@@ -301,7 +293,7 @@ export default function Dashboard() {
           )}
         </div>
       </header>
-      <p className="msg">{posts.length} Posts, davon {unscheduled} ohne Datum. {msg}</p>
+      <p className="msg">{posts.length} Posts. {msg}</p>
       <div className="switch" role="tablist">
         {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
           <button key={k} role="tab" aria-selected={view === k}
@@ -318,7 +310,7 @@ export default function Dashboard() {
             <th></th>
             <th>Video</th>
             <th>Szene</th>
-            <th style={{ width: 175 }}>Geplant (Lokalzeit)</th>
+            <th>Geplant (Lokalzeit)</th>
             <th>Caption</th>
             <th>Länge</th>
             <th>Kommentar (intern)</th>
@@ -345,23 +337,7 @@ export default function Dashboard() {
             >
               <td className="drag" title="Ziehen zum Umsortieren">⠿</td>
               {videoCells(p)}
-              <td>
-                <div className="datecell">
-                  <input
-                    type="datetime-local"
-                    value={toLocal(p.scheduled_at)}
-                    onChange={(e) => edit(p.id, { scheduled_at: toIso(e.target.value) })}
-                  />
-                  <button
-                    className="play"
-                    title="Datum zurücksetzen"
-                    disabled={!p.scheduled_at || busy}
-                    onClick={() => resetDate(p.id)}
-                  >
-                    &#8634;
-                  </button>
-                </div>
-              </td>
+              <td className="nowrap slot">{fmtSlot(p.scheduled_at)}</td>
               {textCells(p)}
               {statusCell(p)}
               {saveCell(p)}

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
+import { applySlots } from "@/lib/plan";
 
-// Speichert die per Drag & Drop erarbeitete Reihenfolge
+// Speichert die per Drag & Drop erarbeitete Reihenfolge und verteilt die Slot-Daten neu
 export async function POST(req) {
   const { ids } = await req.json();
   if (!Array.isArray(ids) || !ids.length) {
@@ -14,6 +15,11 @@ export async function POST(req) {
       .update({ sort_order: i + 1, updated_at: new Date().toISOString() })
       .eq("id", ids[i]);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  try {
+    await applySlots(supabase);
+  } catch (e) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
   return NextResponse.json({ ok: true, count: ids.length });
 }

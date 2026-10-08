@@ -11,7 +11,8 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
-const EDITABLE = ["scheduled_at", "caption", "scene", "comment", "ig_status", "tt_status", "yt_status"];
+// scheduled_at ergibt sich aus dem Slot (lib/plan.js) und ist nicht direkt editierbar
+const EDITABLE = ["caption", "scene", "comment", "ig_status", "tt_status", "yt_status"];
 
 export async function PATCH(req) {
   const { id, ...fields } = await req.json();

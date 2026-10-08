@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
 import { listVideos, videoDuration, folderPath } from "@/lib/dropbox";
+import { applySlots } from "@/lib/plan";
 
 export const maxDuration = 300;
 
@@ -23,6 +24,8 @@ export async function POST() {
       const { error } = await supabase.from("posts").insert(fresh);
       if (error) throw new Error(error.message);
     }
+    // Neue Videos haengen hinten an und bekommen den naechsten freien Slot
+    await applySlots(supabase);
 
     // Pfade nachziehen, wenn sich der Speicherort geaendert hat (z.B. Ordner-Umzug)
     let moved = 0;
