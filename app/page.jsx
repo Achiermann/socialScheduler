@@ -64,7 +64,8 @@ export default function Dashboard() {
       if (!emojiRef.current?.contains(e.target) && !e.target.closest(".emoji-btn")) setEmojiFor(null);
     };
     const onKey = (e) => { if (e.key === "Escape") setEmojiFor(null); };
-    const onScroll = () => setEmojiFor(null);
+    // Nur beim Scrollen der Seite schliessen, nicht beim Scrollen im Picker selbst
+    const onScroll = (e) => { if (!emojiRef.current?.contains(e.target)) setEmojiFor(null); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, true);
