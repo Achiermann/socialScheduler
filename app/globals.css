@@ -419,9 +419,9 @@ button.linkbtn {
 button.linkbtn:hover:not(:disabled) { background: none; color: var(--blue-ink); }
 
 /* ---------- Smartphone / Instagram-Vorschau ---------- */
-button.phone-btn { display: block; margin-top: 6px; background: none; padding: 0; line-height: 0; }
+button.phone-btn { display: block; margin-top: 4px; background: none; padding: 0; line-height: 0; }
 button.phone-btn:hover:not(:disabled) { background: none; opacity: 0.6; }
-.phone-svg * { vector-effect: non-scaling-stroke; stroke-width: 1.6px; }
+.phone-svg * { vector-effect: non-scaling-stroke; stroke-width: 1.4px; }
 .phone-svg.big * { stroke-width: 3px; }
 .phone-overlay {
   position: fixed;

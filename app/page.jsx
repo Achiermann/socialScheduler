@@ -320,7 +320,7 @@ export default function Dashboard() {
           onMouseEnter={() => prefetchLink(p.dropbox_path)}
           onClick={() => { setPlayingId(null); setPhonePost(p); }}
         >
-          <PhoneSvg width="17" height="34" />
+          <PhoneSvg width="25" height="50" screen={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`} />
         </button>
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>

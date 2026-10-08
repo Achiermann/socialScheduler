@@ -1,15 +1,25 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
-// Smartphone in Linien (Stil wie der Shaker). Klein als Icon, gross als Rahmen
-// fuer die Reels-Vorschau. Bildschirm im viewBox: x 7-93, y 7-193 (siehe .phone-screen)
-export function PhoneSvg({ big = false, ...rest }) {
+// Smartphone in Linien (Stil wie der Shaker), weisser Rahmen, schwarzer Bildschirm.
+// Klein als Icon, gross als Rahmen fuer die Reels-Vorschau - beide gleich gezeichnet,
+// nur die Linienstaerke unterscheidet sich (CSS).
+// Bildschirm im viewBox: x 7-93, y 7-193 (siehe .phone-screen)
+// screen: optionales Bild im Bildschirm (Icon zeigt das Vorschaubild, wie gross das Video)
+export function PhoneSvg({ big = false, screen, ...rest }) {
+  const clip = useId();
   return (
     <svg viewBox="0 0 100 200" fill="none" stroke="var(--ink)" strokeLinecap="round" strokeLinejoin="round"
       className={big ? "phone-svg big" : "phone-svg"} aria-hidden="true" {...rest}>
-      <rect x="2" y="2" width="96" height="196" rx="16" fill={big ? "var(--card)" : "none"} />
-      <rect x="7" y="7" width="86" height="186" rx="12" fill={big ? "#000" : "none"} />
-      {!big && <rect x="38" y="12" width="24" height="6" rx="3" fill="var(--ink)" />}
+      <rect x="2" y="2" width="96" height="196" rx="16" fill="var(--card)" />
+      <rect x="7" y="7" width="86" height="186" rx="12" fill="#000" />
+      {screen && (
+        <>
+          <clipPath id={clip}><rect x="7" y="7" width="86" height="186" rx="12" /></clipPath>
+          <image href={screen} x="7" y="7" width="86" height="186" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clip})`} />
+          <rect x="38" y="12" width="24" height="7" rx="3.5" fill="#000" stroke="none" />
+        </>
+      )}
       <path d="M1 42v10M1 58v14M99 56v20" />
     </svg>
   );
