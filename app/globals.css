@@ -328,3 +328,33 @@ button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--i
 .emoji-pop { position: fixed; z-index: 20; box-shadow: var(--sh); border-radius: 8px; }
 /* Globale Input-Styles nicht auf die Picker-Suche anwenden (Lupe links) */
 .emoji-pop .epr-search-container input { padding: 0 30px 0 40px; border-radius: 8px; }
+
+/* ---------- Szene: farbiges Label, Klick oeffnet das Eingabefeld ---------- */
+.scene-tag {
+  height: 100px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+.scene-tag.empty { border: 1px dashed var(--line); }
+.scene-tag.empty:hover { border-color: var(--ink-3); }
+
+/* ---------- Planer: Filter "Vergangen" ---------- */
+.subbar { margin: 0 0 12px; }
+button.toggle {
+  background: var(--card);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  padding: 5px 14px;
+  font-size: 14px;
+}
+button.toggle:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
+button.toggle.active, button.toggle.active:hover:not(:disabled) { background: var(--blue-tint); color: var(--blue-ink); border-color: var(--blue); }
+/* Vergangene Slots gedaempft */
+tr.past td:not(.slot) { opacity: 0.6; }
+tr.past td.slot { color: var(--ink-3); }

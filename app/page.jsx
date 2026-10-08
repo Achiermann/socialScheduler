@@ -18,6 +18,15 @@ function fmtSlot(iso) {
     time: d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" }),
   };
 }
+// Gleicher Szenen-Name -> gleiche Pastellfarbe (Farbton aus dem Namen gehasht)
+function sceneColor(name) {
+  const key = (name || "").trim().toLowerCase();
+  if (!key) return null;
+  let h = 0;
+  for (const ch of key) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return `hsl(${Math.round((h * 137.508) % 360)}, 70%, 86%)`;
+}
+const isPast = (p) => p.scheduled_at && new Date(p.scheduled_at).getTime() < Date.now();
 const started = (p) => [p.ig_status, p.tt_status, p.yt_status].some((s) => s && s !== "pending");
 // Natuerliche Sortierung: jede Zahl im Namen zaehlt numerisch (0052_01 < 0052_02 < 0053_01)
 function byNumber(a, b) {
@@ -36,6 +45,8 @@ export default function Dashboard() {
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
+  const [showPast, setShowPast] = useState(false); // Planer: vergangene Slots einblenden
+  const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
   // Dropbox-Templinks gelten 4h; beim Hover vorgeladen, damit der Klick sofort abspielt
   const videoLinks = useRef({});
@@ -278,7 +289,30 @@ export default function Dashboard() {
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
       <td className="scene">
-        <textarea className="small" value={p.scene || ""} onChange={(e) => edit(p.id, { scene: e.target.value })} onBlur={() => flush(p.id)} />
+        {editingScene === p.id ? (
+          <textarea
+            className="small"
+            autoFocus
+            value={p.scene || ""}
+            onChange={(e) => edit(p.id, { scene: e.target.value })}
+            onBlur={() => { flush(p.id); setEditingScene(null); }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" || (e.key === "Enter" && !e.shiftKey)) { e.preventDefault(); e.currentTarget.blur(); }
+            }}
+          />
+        ) : (
+          <div
+            className={"scene-tag" + (p.scene?.trim() ? "" : " empty")}
+            style={{ background: sceneColor(p.scene) || undefined }}
+            role="button"
+            tabIndex={0}
+            title="Klicken zum Bearbeiten"
+            onClick={() => setEditingScene(p.id)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingScene(p.id); } }}
+          >
+            {p.scene}
+          </div>
+        )}
       </td>
     </>
   );
@@ -387,6 +421,17 @@ export default function Dashboard() {
           </button>
         ))}
       </div>
+      {view === "planer" && (
+        <div className="subbar">
+          <button
+            className={"toggle" + (showPast ? " active" : "")}
+            aria-pressed={showPast}
+            onClick={() => setShowPast((v) => !v)}
+          >
+            Vergangen ({posts.filter(isPast).length})
+          </button>
+        </div>
+      )}
       {view === "planer" ? (
       <table>
         <thead>
@@ -403,14 +448,14 @@ export default function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {posts.map((p) => (
+          {posts.filter((p) => showPast || !isPast(p)).map((p) => (
             <tr
               key={p.id}
-              className={overId === p.id ? "dragover" : ""}
+              className={[overId === p.id && "dragover", isPast(p) && "past"].filter(Boolean).join(" ")}
               draggable={armed === p.id}
               onMouseDown={(e) => {
                 // Ganze Zeile ziehbar - ausser auf interaktiven Elementen
-                if (!e.target.closest("input, textarea, button, select, a, video, img.thumb")) setArmed(p.id);
+                if (!e.target.closest("input, textarea, button, select, a, video, img.thumb, .scene-tag")) setArmed(p.id);
               }}
               onMouseUp={() => setArmed(null)}
               onDragStart={() => { dragId.current = p.id; }}
