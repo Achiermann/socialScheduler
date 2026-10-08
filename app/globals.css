@@ -56,7 +56,6 @@ h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 4p
 table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--card);
   border-radius: var(--r);
   overflow: hidden;
 }
@@ -75,9 +74,9 @@ th {
   line-height: 1.25;
   white-space: nowrap;
 }
-td { font-variant-numeric: tabular-nums; }
+td { font-variant-numeric: tabular-nums; background: var(--card); }
 tbody tr { cursor: grab; transition: background 0.16s var(--ease); }
-tbody tr:hover td { background: var(--hover); }
+tbody tr:hover td:not(.slot) { background: var(--hover); }
 tbody tr:active { cursor: grabbing; }
 tbody tr:last-child td { border-bottom: none; }
 tbody td:has(input), tbody td:has(textarea), tbody td:has(button) { cursor: auto; }
@@ -92,7 +91,7 @@ td.drag {
   text-align: center;
 }
 td.drag:active { cursor: grabbing; }
-tr.dragover td { border-top: 2px solid var(--blue-600); }
+tr.dragover td:not(.slot) { border-top: 2px solid var(--blue-600); }
 
 /* Statuszeile "IG [chip] [Retry]" bleibt eine Zeile, sonst bricht die Spalte um */
 td div:has(.badge) {
@@ -122,7 +121,17 @@ textarea {
 }
 input[type="time"], input[type="number"] { font-variant-numeric: tabular-nums; }
 
-td.slot { font-weight: 600; }
+/* Slot-Datum steht links ausserhalb der Tabelle, auf dem Seitenhintergrund */
+th.slot, td.slot {
+  background: var(--bg);
+  border-bottom: none;
+  padding: 9px 14px 9px 0;
+  text-align: right;
+  white-space: nowrap;
+  cursor: default;
+}
+.slot-date { font-weight: 600; font-size: 15px; }
+.slot-time { font-size: 13px; color: var(--ink-2); }
 input:hover, textarea:hover { border-color: var(--ink-3); }
 input:focus, textarea:focus {
   outline: 2px solid var(--blue-600);

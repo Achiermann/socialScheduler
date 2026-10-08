@@ -5,12 +5,14 @@ function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
 }
 
-// Slot-Datum in Lokalzeit, z.B. "Mo 12.10.26, 10:00"
+// Slot-Datum in Lokalzeit: "12.10.26" + "10:00"
 function fmtSlot(iso) {
-  if (!iso) return "–";
-  return new Date(iso).toLocaleString("de-CH", {
-    weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
+  if (!iso) return { date: "–", time: "" };
+  const d = new Date(iso);
+  return {
+    date: d.toLocaleDateString("de-CH", { day: "2-digit", month: "2-digit", year: "2-digit" }),
+    time: d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" }),
+  };
 }
 const started = (p) => [p.ig_status, p.tt_status, p.yt_status].some((s) => s && s !== "pending");
 // Natuerliche Sortierung: jede Zahl im Namen zaehlt numerisch (0052_01 < 0052_02 < 0053_01)
@@ -22,7 +24,9 @@ export default function Dashboard() {
   const [posts, setPosts] = useState([]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
-  const [dirty, setDirty] = useState({});
+  // Autosave: Aenderungen je Post sammeln und kurz nach der letzten Eingabe speichern
+  const pendingEdits = useRef({});
+  const saveTimers = useRef({});
   const [plan, setPlan] = useState({ time: "10:00", intervalDays: 2 }); // Slot-Einstellungen
   const dragId = useRef(null);
   const [overId, setOverId] = useState(null);
@@ -131,24 +135,45 @@ export default function Dashboard() {
     }
   }, []);
 
-  function edit(id, fields) {
+  function edit(id, fields, immediate = false) {
     setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, ...fields } : p)));
-    setDirty((d) => ({ ...d, [id]: { ...d[id], ...fields } }));
+    pendingEdits.current[id] = { ...pendingEdits.current[id], ...fields };
+    clearTimeout(saveTimers.current[id]);
+    saveTimers.current[id] = setTimeout(() => flush(id), immediate ? 0 : 800);
   }
 
-  async function save(id) {
-    setBusy(true);
+  async function flush(id) {
+    clearTimeout(saveTimers.current[id]);
+    const fields = pendingEdits.current[id];
+    if (!fields) return;
+    delete pendingEdits.current[id];
     const res = await fetch("/api/posts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...dirty[id] }),
-    });
-    setBusy(false);
-    if (res.ok) {
-      setDirty((d) => { const n = { ...d }; delete n[id]; return n; });
-      setMsg("Gespeichert.");
-    } else setMsg("Fehler beim Speichern.");
+      body: JSON.stringify({ id, ...fields }),
+    }).catch(() => null);
+    if (res?.ok) { setMsg("Gespeichert."); return; }
+    // Nicht verlieren: zurueck in die Warteschlange, neuere Eingaben haben Vorrang
+    pendingEdits.current[id] = { ...fields, ...pendingEdits.current[id] };
+    setMsg("Fehler beim Speichern – wird bei der nächsten Änderung erneut versucht.");
   }
+
+  // Offene Aenderungen beim Verlassen der Seite noch absenden
+  useEffect(() => {
+    const onHide = () => {
+      for (const [id, fields] of Object.entries(pendingEdits.current)) {
+        fetch("/api/posts", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...fields }),
+          keepalive: true,
+        });
+      }
+      pendingEdits.current = {};
+    };
+    window.addEventListener("pagehide", onHide);
+    return () => window.removeEventListener("pagehide", onHide);
+  }, []);
 
   async function sync() {
     setBusy(true);
@@ -195,18 +220,18 @@ export default function Dashboard() {
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
       <td>
-        <textarea className="small" value={p.scene || ""} onChange={(e) => edit(p.id, { scene: e.target.value })} />
+        <textarea className="small" value={p.scene || ""} onChange={(e) => edit(p.id, { scene: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
     </>
   );
   const textCells = (p) => (
     <>
       <td>
-        <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} />
+        <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
       <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
       <td>
-        <textarea className="small" value={p.comment || ""} onChange={(e) => edit(p.id, { comment: e.target.value })} />
+        <textarea className="small" value={p.comment || ""} onChange={(e) => edit(p.id, { comment: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
     </>
   );
@@ -216,32 +241,26 @@ export default function Dashboard() {
         IG <Badge status={p.ig_status} />
         {p.ig_status === "error" && (
           <button className="play" title="Erneut versuchen"
-            onClick={() => { edit(p.id, { ig_status: "pending" }); }}>↻</button>
+            onClick={() => edit(p.id, { ig_status: "pending" }, true)}>↻</button>
         )}
       </div>
       <div>
         TT <Badge status={p.tt_status} />
         {p.tt_status === "error" && (
           <button className="play" title="Erneut versuchen"
-            onClick={() => { edit(p.id, { tt_status: "pending" }); }}>&#8635;</button>
+            onClick={() => edit(p.id, { tt_status: "pending" }, true)}>&#8635;</button>
         )}
       </div>
       <div>
         YT <Badge status={p.yt_status} />
         {p.yt_status === "error" && (
           <button className="play" title="Erneut versuchen"
-            onClick={() => { edit(p.id, { yt_status: "pending" }); }}>&#8635;</button>
+            onClick={() => edit(p.id, { yt_status: "pending" }, true)}>&#8635;</button>
         )}
       </div>
     </td>
   );
-  const saveCell = (p) => (
-    <td>
-      <button className="secondary" disabled={!dirty[p.id] || busy} onClick={() => save(p.id)}>
-        Speichern
-      </button>
-    </td>
-  );
+
 
   return (
     <main>
@@ -306,16 +325,15 @@ export default function Dashboard() {
       <table>
         <thead>
           <tr>
+            <th className="slot"></th>
             <th></th>
             <th></th>
             <th>Video</th>
             <th>Szene</th>
-            <th>Geplant (Lokalzeit)</th>
             <th>Caption</th>
             <th>Länge</th>
             <th>Kommentar (intern)</th>
             <th>Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -335,12 +353,14 @@ export default function Dashboard() {
               onDragLeave={() => setOverId(null)}
               onDrop={(e) => { e.preventDefault(); dropOn(p.id); }}
             >
+              <td className="slot">
+                <div className="slot-date">{fmtSlot(p.scheduled_at).date}</div>
+                <div className="slot-time">{fmtSlot(p.scheduled_at).time}</div>
+              </td>
               <td className="drag" title="Ziehen zum Umsortieren">⠿</td>
               {videoCells(p)}
-              <td className="nowrap slot">{fmtSlot(p.scheduled_at)}</td>
               {textCells(p)}
               {statusCell(p)}
-              {saveCell(p)}
             </tr>
           ))}
         </tbody>
@@ -356,7 +376,6 @@ export default function Dashboard() {
             <th>Länge</th>
             <th>Kommentar (intern)</th>
             <th>Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -365,7 +384,6 @@ export default function Dashboard() {
               {videoCells(p)}
               {textCells(p)}
               {statusCell(p)}
-              {saveCell(p)}
             </tr>
           ))}
         </tbody>
