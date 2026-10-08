@@ -165,10 +165,14 @@ export default function Dashboard() {
 
   async function load() {
     const res = await fetch("/api/posts");
-    if (res.ok) setPosts(await res.json());
+    if (!res.ok) return;
+    // Noch nicht gespeicherte Eingaben nicht mit dem Serverstand ueberschreiben
+    const data = await res.json();
+    setPosts(data.map((p) => ({ ...p, ...pendingEdits.current[p.id] })));
   }
   useEffect(() => {
     load();
+    if (!synced.current) { synced.current = true; sync(); } // StrictMode ruft Effekte doppelt auf
     fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).then((d) => {
       if (d) setPlan({ time: d.time, intervalDays: d.intervalDays });
     });
@@ -226,15 +230,18 @@ export default function Dashboard() {
     return () => window.removeEventListener("pagehide", onHide);
   }, []);
 
+  // Dropbox-Sync bei jedem Seitenaufruf: erst gespeicherten Stand zeigen,
+  // dann im Hintergrund synchronisieren und neu laden
+  const synced = useRef(false);
   async function sync() {
-    setBusy(true);
     setMsg("Synchronisiere mit Dropbox …");
-    const res = await fetch("/api/sync", { method: "POST" });
-    const data = await res.json();
-    setBusy(false);
-    setMsg(res.ok
-      ? `${data.total} Videos, ${data.added} neu, ${data.durations} Längen ergänzt.`
-      : `Fehler: ${data.error}${data.debug ? " | " + JSON.stringify(data.debug) : ""}`);
+    const res = await fetch("/api/sync", { method: "POST" }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : { error: "keine Verbindung" };
+    if (!res?.ok) {
+      setMsg(`Sync-Fehler: ${data.error}${data.debug ? " | " + JSON.stringify(data.debug) : ""}`);
+      return;
+    }
+    setMsg(data.added ? `${data.added} neue Videos aus Dropbox.` : "");
     load();
   }
 
@@ -346,10 +353,6 @@ export default function Dashboard() {
           {settingsOpen && (
             <div className="settings-panel" role="dialog" aria-label="Einstellungen">
               <h2>Einstellungen</h2>
-              <section>
-                <h3>Dropbox</h3>
-                <button onClick={sync} disabled={busy}>Dropbox-Sync</button>
-              </section>
               <section>
                 <h3>Datums-Slots</h3>
                 <div className="row">

@@ -21,7 +21,8 @@ export async function POST() {
       .filter((v) => !byName.has(v.filename))
       .map((v) => ({ ...v, sort_order: nextOrder++ }));
     if (fresh.length) {
-      const { error } = await supabase.from("posts").insert(fresh);
+      // ignoreDuplicates: zwei gleichzeitige Syncs (z.B. zwei Tabs) duerfen sich nicht in die Quere kommen
+      const { error } = await supabase.from("posts").upsert(fresh, { onConflict: "filename", ignoreDuplicates: true });
       if (error) throw new Error(error.message);
     }
     // Neue Videos haengen hinten an und bekommen den naechsten freien Slot
