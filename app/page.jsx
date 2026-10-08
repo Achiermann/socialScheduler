@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
+  const [shakeKey, setShakeKey] = useState(0); // neu mounten = Shake-Animation neu starten
   const [showPast, setShowPast] = useState(false); // Planer: vergangene Slots einblenden
   const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
@@ -419,13 +420,36 @@ export default function Dashboard() {
         </div>
       </header>
       <p className="msg">{posts.length} Posts. {msg}</p>
-      <div className="switch" role="tablist">
-        {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={view === k}
-            className={view === k ? "active" : ""} onClick={() => setView(k)}>
-            {label}
-          </button>
-        ))}
+      <div className="switchbar">
+        <div className="switch" role="tablist">
+          {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={view === k}
+              className={view === k ? "active" : ""} onClick={() => setView(k)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <button className="shaker" title="Shake!" aria-label="Shaker schütteln" onClick={() => setShakeKey((k) => k + 1)}>
+          <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="34" height="34" viewBox="0 0 48 48" aria-hidden="true">
+            <defs>
+              <clipPath id="shaker-body"><rect x="16" y="3" width="16" height="42" rx="8" /></clipPath>
+            </defs>
+            <g transform="rotate(-30 24 24)">
+              <g clipPath="url(#shaker-body)">
+                <rect x="16" y="3" width="16" height="42" fill="var(--blue)" />
+                <rect x="16" y="3" width="16" height="9" fill="var(--blue-ink)" />
+                <rect x="16" y="36" width="16" height="9" fill="var(--blue-ink)" />
+                <rect x="16" y="15" width="16" height="2" fill="var(--blue-tint)" />
+                <rect x="16" y="31" width="16" height="2" fill="var(--blue-tint)" />
+                <circle cx="21" cy="21" r="1.4" fill="var(--blue-ink)" />
+                <circle cx="27" cy="23" r="1.4" fill="var(--blue-ink)" />
+                <circle cx="22" cy="26.5" r="1.4" fill="var(--blue-ink)" />
+                <circle cx="26.5" cy="28" r="1.4" fill="var(--blue-ink)" />
+              </g>
+              <rect x="16" y="3" width="16" height="42" rx="8" fill="none" stroke="var(--blue-ink)" strokeWidth="2" />
+            </g>
+          </svg>
+        </button>
       </div>
       {view === "planer" && (
         <div className="subbar">

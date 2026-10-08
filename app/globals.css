@@ -259,9 +259,9 @@ main.legal code { background: #e7e5e4; padding: 1px 3px; border-radius: 3px; fon
 main.legal a { color: #1c1917; }
 
 /* ---------- Umschalter Planer / Übersicht ---------- */
+.switchbar { display: flex; align-items: center; justify-content: space-between; margin: 0 0 9px; }
 .switch {
   display: inline-flex;
-  margin: 0 0 9px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--card);
@@ -384,4 +384,21 @@ tbody td .scene-edit textarea {
   white-space: pre-wrap;
   word-break: break-word;
   overflow: hidden;
+}
+
+/* ---------- Shaker ---------- */
+button.shaker { background: none; padding: 2px; line-height: 0; border-radius: 50%; }
+button.shaker:hover:not(:disabled) { background: var(--hover); }
+.shaker svg.shake { animation: shake 0.5s linear; transform-origin: 50% 50%; }
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(-2px, 1px) rotate(-14deg); }
+  20% { transform: translate(2px, -1px) rotate(12deg); }
+  30% { transform: translate(-2px, 1px) rotate(-12deg); }
+  40% { transform: translate(2px, -1px) rotate(10deg); }
+  50% { transform: translate(-2px, 1px) rotate(-10deg); }
+  60% { transform: translate(2px, -1px) rotate(8deg); }
+  70% { transform: translate(-1px, 1px) rotate(-6deg); }
+  80% { transform: translate(1px, 0) rotate(4deg); }
+  90% { transform: translate(-1px, 0) rotate(-2deg); }
 }
