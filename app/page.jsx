@@ -31,6 +31,21 @@ export default function Dashboard() {
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Einstellungen schliessen bei Klick daneben oder Escape
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const onDown = (e) => { if (!settingsRef.current?.contains(e.target)) setSettingsOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setSettingsOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [settingsOpen]);
 
   async function dropOn(targetId) {
     const from = dragId.current;
@@ -213,21 +228,54 @@ export default function Dashboard() {
 
   return (
     <main>
-      <h1>Social Scheduler</h1>
-      <div className="toolbar">
-        <button onClick={sync} disabled={busy}>Dropbox-Sync</button>
-        <span className="sep" />
-        <input type="datetime-local" value={apStart} onChange={(e) => setApStart(e.target.value)} style={{ width: 190 }} />
-        <span className="msg">alle</span>
-        <input type="number" min="1" value={apDays} onChange={(e) => setApDays(e.target.value)} style={{ width: 52 }} />
-        <span className="msg">Tage</span>
-        <button className="secondary" onClick={autoplan} disabled={busy || !unscheduled}>
-          Auto-Plan ({unscheduled} offen)
-        </button>
-        <span className="sep" />
-        <a className="link" href="/api/tiktok/auth">TikTok verbinden</a>
-        <a className="link" href="/api/youtube/auth">YouTube verbinden</a>
-      </div>
+      <header className="topbar">
+        <h1>Social Scheduler</h1>
+        <div className="settings" ref={settingsRef}>
+          <button
+            className="gear"
+            title="Einstellungen"
+            aria-label="Einstellungen"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen((o) => !o)}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          {settingsOpen && (
+            <div className="settings-panel" role="dialog" aria-label="Einstellungen">
+              <h2>Einstellungen</h2>
+              <section>
+                <h3>Dropbox</h3>
+                <button onClick={sync} disabled={busy}>Dropbox-Sync</button>
+              </section>
+              <section>
+                <h3>Auto-Plan</h3>
+                <div className="row">
+                  <input type="datetime-local" value={apStart} onChange={(e) => setApStart(e.target.value)} />
+                </div>
+                <div className="row">
+                  <span className="msg">alle</span>
+                  <input type="number" min="1" value={apDays} onChange={(e) => setApDays(e.target.value)} style={{ width: 64 }} />
+                  <span className="msg">Tage</span>
+                  <button className="secondary" onClick={autoplan} disabled={busy || !unscheduled}>
+                    Auto-Plan ({unscheduled} offen)
+                  </button>
+                </div>
+              </section>
+              <section>
+                <h3>Verbindungen</h3>
+                <div className="row">
+                  <a className="link" href="/api/tiktok/auth">TikTok verbinden</a>
+                  <a className="link" href="/api/youtube/auth">YouTube verbinden</a>
+                </div>
+              </section>
+            </div>
+          )}
+        </div>
+      </header>
       <p className="msg">{posts.length} Posts, davon {unscheduled} ohne Datum. {msg}</p>
       <div className="switch" role="tablist">
         {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
