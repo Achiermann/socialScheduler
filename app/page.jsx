@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
+  const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
 
@@ -151,31 +152,35 @@ export default function Dashboard() {
     load();
   }
 
-  function openVideo(p) {
-    window.open(
-      `/api/video?path=${encodeURIComponent(p.dropbox_path)}`,
-      "video_" + p.id,
-      "width=420,height=760"
-    );
-  }
-
   // Zellen, die Planer und Übersicht gemeinsam nutzen
   const videoCells = (p) => (
     <>
       <td className="thumbcell">
-        <img
-          className="thumb"
-          draggable={false}
-          src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
-          alt=""
-          loading="lazy"
-          onClick={() => openVideo(p)}
-          title="Video abspielen"
-        />
+        {playingId === p.id ? (
+          <video
+            className="thumb"
+            src={`/api/video?raw=1&path=${encodeURIComponent(p.dropbox_path)}`}
+            poster={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
+            autoPlay
+            playsInline
+            onClick={() => setPlayingId(null)}
+            onEnded={() => setPlayingId(null)}
+            title="Stopp"
+          />
+        ) : (
+          <img
+            className="thumb"
+            draggable={false}
+            src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
+            alt=""
+            loading="lazy"
+            onClick={() => setPlayingId(p.id)}
+            title="Abspielen"
+          />
+        )}
       </td>
       <td>
         {p.filename}
-        <button className="play" onClick={() => openVideo(p)} title="Video in Fenster öffnen">▶</button>
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
       <td>
@@ -312,7 +317,7 @@ export default function Dashboard() {
               draggable={armed === p.id}
               onMouseDown={(e) => {
                 // Ganze Zeile ziehbar - ausser auf interaktiven Elementen
-                if (!e.target.closest("input, textarea, button, select, a")) setArmed(p.id);
+                if (!e.target.closest("input, textarea, button, select, a, video, img.thumb")) setArmed(p.id);
               }}
               onMouseUp={() => setArmed(null)}
               onDragStart={() => { dragId.current = p.id; }}

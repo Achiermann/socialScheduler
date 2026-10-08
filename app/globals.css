@@ -196,7 +196,7 @@ a.link:hover { color: var(--blue-ink); }
 /* ---------- Video-Thumbnail ---------- */
 /* Bild fuellt die ganze Zeilenhoehe: absolut positioniert, damit es die Zeile nicht selbst streckt */
 td.thumbcell { position: relative; width: 72px; min-width: 72px; padding: 0; }
-img.thumb {
+.thumb {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -208,7 +208,7 @@ img.thumb {
   background: var(--line-2);
   transition: box-shadow 0.16s var(--ease);
 }
-img.thumb:hover { box-shadow: 0 0 0 2px var(--blue-600); }
+.thumb:hover { box-shadow: 0 0 0 2px var(--blue-600); }
 
 .nowrap { white-space: nowrap; }
 
