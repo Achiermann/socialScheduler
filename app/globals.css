@@ -330,16 +330,23 @@ button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--i
 .emoji-pop .epr-search-container input { padding: 0 30px 0 40px; border-radius: 8px; }
 
 /* ---------- Szene: farbiges Label, Klick oeffnet das Eingabefeld ---------- */
+/* Ganze Zelle ist Klickflaeche, die Farbe sitzt nur auf dem Text */
 .scene-tag {
   height: 100px;
-  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  cursor: text;
+}
+.scene-label {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 8px;
   border-radius: var(--r-sm);
   font-size: 14px;
+  font-weight: 500;
   line-height: 1.4;
-  overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
-  cursor: text;
 }
 .scene-tag.empty { border: 1px dashed var(--line); }
 .scene-tag.empty:hover { border-color: var(--ink-3); }

@@ -303,14 +303,15 @@ export default function Dashboard() {
         ) : (
           <div
             className={"scene-tag" + (p.scene?.trim() ? "" : " empty")}
-            style={{ background: sceneColor(p.scene) || undefined }}
             role="button"
             tabIndex={0}
             title="Klicken zum Bearbeiten"
             onClick={() => setEditingScene(p.id)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingScene(p.id); } }}
           >
-            {p.scene}
+            {p.scene?.trim() && (
+              <span className="scene-label" style={{ background: sceneColor(p.scene) }}>{p.scene.trim()}</span>
+            )}
           </div>
         )}
       </td>
