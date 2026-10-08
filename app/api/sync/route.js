@@ -1,19 +1,36 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
-import { listVideos, videoDuration, folderPath } from "@/lib/dropbox";
+import { listVideos, listArchived, videoDuration, folderPath } from "@/lib/dropbox";
 import { applySlots, saveOrder } from "@/lib/plan";
 import { insertNew } from "@/lib/spread";
 
 export const maxDuration = 300;
 
-// Holt alle Videodateien aus dem Dropbox-Ordner, legt neue Posts an,
-// aktualisiert verschobene Pfade und ergaenzt fehlende Videolaengen.
+// Spiegelt den Dropbox-App-Ordner: legt neue Posts an, loescht Posts, deren
+// Datei weg ist, aktualisiert verschobene Pfade und ergaenzt fehlende Videolaengen.
 export async function POST() {
   try {
     const videos = await listVideos();
+    const archived = await listArchived();
     const supabase = db();
-    const { data: existing } = await supabase.from("posts").select("id, filename, dropbox_path");
+    const { data: existing, error: exErr } = await supabase.from("posts").select("id, filename, dropbox_path");
+    if (exErr) throw new Error(exErr.message);
     const byName = new Map((existing || []).map((p) => [p.filename, p]));
+
+    // Posts ohne Datei entfernen (geloescht oder umbenannt). Archivierte Videos
+    // (/Uploaded) zaehlen ueber ihren Pfad, weil Dropbox sie beim Verschieben
+    // umbenennen kann. Liefert Dropbox gar nichts, wird nichts geloescht -
+    // lieber einmal zu wenig aufraeumen als bei einer Stoerung alles verlieren.
+    const inRoot = new Set(videos.map((v) => v.filename));
+    const archivedPaths = new Set(archived.map((v) => v.dropbox_path));
+    const gone = (existing || []).filter((p) => !inRoot.has(p.filename) && !archivedPaths.has(p.dropbox_path));
+    let removed = 0;
+    if (gone.length && videos.length + archived.length > 0) {
+      const { error } = await supabase.from("posts").delete().in("id", gone.map((p) => p.id));
+      if (error) throw new Error(error.message);
+      removed = gone.length;
+      for (const p of gone) byName.delete(p.filename);
+    }
 
     const { data: maxRow } = await supabase
       .from("posts").select("sort_order").order("sort_order", { ascending: false, nullsFirst: false }).limit(1);
@@ -42,6 +59,7 @@ export async function POST() {
       );
       await saveOrder(supabase, ordered.map((p) => p.id));
     }
+    // Nach Neuzugaengen oder Loeschungen rutschen die Slot-Daten nach
     await applySlots(supabase);
 
     // Pfade nachziehen, wenn sich der Speicherort geaendert hat (z.B. Ordner-Umzug)
@@ -72,7 +90,7 @@ export async function POST() {
       } catch { /* einzelne Fehler ignorieren, kommt beim naechsten Sync */ }
     }
 
-    return NextResponse.json({ total: videos.length, added: fresh.length, moved, durations });
+    return NextResponse.json({ total: videos.length, added: fresh.length, removed, moved, durations });
   } catch (e) {
     // Diagnose: zeigt, womit diese Umgebung tatsaechlich arbeitet
     return NextResponse.json({

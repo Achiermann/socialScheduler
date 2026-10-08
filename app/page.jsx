@@ -279,7 +279,11 @@ export default function Dashboard() {
       setMsg(`Sync-Fehler: ${data.error}${data.debug ? " | " + JSON.stringify(data.debug) : ""}`);
       return;
     }
-    setMsg(data.added ? `${data.added} neue Videos aus Dropbox.` : "");
+    const changes = [
+      data.added && `${data.added} neue Videos aus Dropbox`,
+      data.removed && `${data.removed} entfernt (nicht mehr in Dropbox)`,
+    ].filter(Boolean);
+    setMsg(changes.length ? changes.join(", ") + "." : "");
     load();
   }
 
