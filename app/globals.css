@@ -28,9 +28,9 @@
   --err-bg: #fbe4e4;   --err-ink: #b3261e;
   --mute-bg: #eceff0;  --mute-ink: #5a6266;
 
-  --r: 4px;
-  --r-sm: 3px;
-  --sh: 0 1px 4px rgba(0, 0, 0, 0.1), 0 4px 14px rgba(0, 0, 0, 0.06);
+  --r: 3px;
+  --r-sm: 2px;
+  --sh: 0 1px 3px rgba(0, 0, 0, 0.1), 0 3px 10px rgba(0, 0, 0, 0.06);
   --ease: cubic-bezier(0.25, 0.6, 0.3, 1);
 }
 
@@ -46,9 +46,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-main { max-width: 1400px; margin: 0 auto; padding: 28px 20px 64px; overflow-x: auto; }
+main { max-width: 1050px; margin: 0 auto; padding: 21px 15px 48px; overflow-x: auto; }
 
-h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 4px; }
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 3px; }
 
 :focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; border-radius: 2px; }
 
@@ -60,7 +60,7 @@ table {
   overflow: hidden;
 }
 th, td {
-  padding: 9px 10px;
+  padding: 7px 8px;
   text-align: left;
   border-bottom: 1px solid var(--line);
   font-size: 15px;
@@ -86,7 +86,7 @@ td.drag {
   color: var(--ink-3);
   font-size: 16px;
   user-select: none;
-  width: 28px;
+  width: 21px;
   vertical-align: middle;
   text-align: center;
 }
@@ -97,9 +97,9 @@ tr.dragover td:not(.slot) { border-top: 2px solid var(--blue-600); }
 td div:has(.badge) {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   white-space: nowrap;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 td div:has(.badge):last-child { margin-bottom: 0; }
 
@@ -113,7 +113,7 @@ textarea {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
-  padding: 8px 10px;
+  padding: 6px 8px;
   font: inherit;
   font-size: 15px;
   color: var(--ink);
@@ -125,7 +125,7 @@ input[type="time"], input[type="number"] { font-variant-numeric: tabular-nums; }
 th.slot, td.slot {
   background: var(--bg);
   border-bottom: none;
-  padding: 9px 14px 9px 0;
+  padding: 7px 10px 7px 0;
   text-align: right;
   white-space: nowrap;
   cursor: default;
@@ -138,22 +138,22 @@ input:focus, textarea:focus {
   outline-offset: -1px;
   border-color: transparent;
 }
-textarea { min-height: 60px; resize: none; line-height: 1.4; }
+textarea { min-height: 45px; resize: none; line-height: 1.4; }
 /* Eingabefelder fuellen die Zeile: gleicher Abstand oben und unten (= Zell-Padding) */
-tbody td { padding-top: 12px; padding-bottom: 12px; }
-tbody td textarea, tbody td textarea.small { display: block; height: 100px; min-height: 0; }
+tbody td { padding-top: 9px; padding-bottom: 9px; }
+tbody td textarea, tbody td textarea.small { display: block; height: 75px; min-height: 0; }
 /* Szene ein Drittel schmaler als die automatische Breite (244px) */
-td.scene { width: 163px; }
+td.scene { width: 122px; }
 /* Caption braucht Breite, sonst frisst sie die schmalste Spalte der Tabelle */
-td textarea:not(.small) { min-width: 180px; }
-textarea.small { min-height: 40px; font-size: 14px; min-width: 94px; }
-input[type="checkbox"] { accent-color: var(--blue-600); width: 15px; height: 15px; }
+td textarea:not(.small) { min-width: 135px; }
+textarea.small { min-height: 30px; font-size: 14px; min-width: 70px; }
+input[type="checkbox"] { accent-color: var(--blue-600); width: 11px; height: 11px; }
 
 /* ---------- Buttons ---------- */
 button {
   border: none;
   border-radius: var(--r-sm);
-  padding: 9px 16px;
+  padding: 7px 12px;
   font: inherit;
   font-size: 16px;
   font-weight: 600;
@@ -167,14 +167,14 @@ button.secondary {
   background: var(--card);
   color: var(--ink);
   border: 1px solid var(--line);
-  padding: 8px 15px;
+  padding: 6px 11px;
 }
 button.secondary:hover:not(:disabled) { background: var(--hover); border-color: var(--ink); }
 button:disabled { opacity: 0.45; cursor: default; }
 button.play {
   background: none;
   color: var(--ink);
-  padding: 2px 7px;
+  padding: 2px 5px;
   font-size: 15px;
   font-weight: 400;
   border-radius: var(--r-sm);
@@ -184,7 +184,7 @@ button.play:hover:not(:disabled) { background: var(--hover); }
 /* ---------- Status-Chips: semantische Farben, flach wie SBB-Piktogramme ---------- */
 .badge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 2px;
   font-size: 14px;
   font-weight: 600;
@@ -200,12 +200,12 @@ button.play:hover:not(:disabled) { background: var(--hover); }
 
 .msg { font-size: 15px; color: var(--ink-2); }
 
-a.link { font-size: 15px; color: var(--blue-600); text-decoration: underline; text-underline-offset: 3px; }
+a.link { font-size: 15px; color: var(--blue-600); text-decoration: underline; text-underline-offset: 2px; }
 a.link:hover { color: var(--blue-ink); }
 
 /* ---------- Video-Thumbnail ---------- */
 /* Bild fuellt die ganze Zeilenhoehe: absolut positioniert, damit es die Zeile nicht selbst streckt */
-td.thumbcell { position: relative; width: 72px; min-width: 72px; padding: 0; }
+td.thumbcell { position: relative; width: 54px; min-width: 54px; padding: 0; }
 .thumb {
   position: absolute;
   inset: 0;
@@ -226,42 +226,42 @@ td.thumbcell { position: relative; width: 72px; min-width: 72px; padding: 0; }
 .login { display: grid; place-items: center; min-height: 100vh; background: var(--bg); }
 .login form {
   background: var(--card);
-  padding: 36px 32px;
+  padding: 27px 24px;
   border-radius: var(--r);
   box-shadow: var(--sh);
   display: grid;
-  gap: 14px;
-  width: 340px;
+  gap: 10px;
+  width: 255px;
 }
-.login h1 { font-size: 22px; margin-bottom: 6px; }
-.login input { font-size: 17px; padding: 10px 12px; }
+.login h1 { font-size: 22px; margin-bottom: 4px; }
+.login input { font-size: 17px; padding: 8px 9px; }
 
 /* ---------- Rechtstexte ---------- */
 main.legal {
-  max-width: 780px;
-  margin: 32px auto 64px;
-  padding: 44px 48px;
+  max-width: 585px;
+  margin: 24px auto 48px;
+  padding: 33px 36px;
   background: var(--card);
   border-radius: var(--r);
 }
-main.legal h1 { font-size: 30px; margin-bottom: 4px; }
-main.legal h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 32px 0 8px; }
+main.legal h1 { font-size: 30px; margin-bottom: 3px; }
+main.legal h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 24px 0 6px; }
 main.legal p, main.legal li { font-size: 17px; line-height: 1.65; }
 main.legal em { font-style: normal; font-size: 15px; color: var(--ink-2); }
-main.legal ul { padding-left: 20px; margin: 12px 0; }
-main.legal li { margin-bottom: 10px; }
+main.legal ul { padding-left: 15px; margin: 9px 0; }
+main.legal li { margin-bottom: 8px; }
 main.legal li::marker { color: var(--blue-600); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
 }
-main.legal code { background: #e7e5e4; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+main.legal code { background: #e7e5e4; padding: 1px 3px; border-radius: 3px; font-size: 13px; }
 main.legal a { color: #1c1917; }
 
 /* ---------- Umschalter Planer / Übersicht ---------- */
 .switch {
   display: inline-flex;
-  margin: 0 0 12px;
+  margin: 0 0 9px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--card);
@@ -271,7 +271,7 @@ main.legal a { color: #1c1917; }
   background: var(--card);
   color: var(--ink-2);
   border-radius: 0;
-  padding: 7px 18px;
+  padding: 5px 14px;
   font-size: 15px;
 }
 .switch button + button { border-left: 1px solid var(--line); }
@@ -281,58 +281,58 @@ main.legal a { color: #1c1917; }
 table.overview tbody tr { cursor: auto; }
 
 /* ---------- Kopfzeile + Einstellungen ---------- */
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 12px; }
 .topbar h1 { margin: 0; }
 .settings { position: relative; }
 button.gear {
   background: none;
   color: var(--ink-2);
-  padding: 7px;
+  padding: 5px;
   line-height: 0;
 }
 button.gear:hover:not(:disabled), button.gear[aria-expanded="true"] { background: var(--hover); color: var(--ink); }
 .settings-panel {
   position: absolute;
   right: 0;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   z-index: 10;
-  width: 360px;
-  max-width: calc(100vw - 32px);
+  width: 270px;
+  max-width: calc(100vw - 24px);
   background: var(--card);
   border-radius: var(--r);
   box-shadow: var(--sh);
-  padding: 18px 20px 20px;
+  padding: 14px 15px 15px;
 }
-.settings-panel h2 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
-.settings-panel section { padding: 12px 0; border-top: 1px solid var(--line-2); }
+.settings-panel h2 { font-size: 18px; font-weight: 700; margin: 0 0 3px; }
+.settings-panel section { padding: 9px 0; border-top: 1px solid var(--line-2); }
 .settings-panel section:first-of-type { border-top: none; }
-.settings-panel h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px; }
-.settings-panel .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.settings-panel .row + .row { margin-top: 8px; }
+.settings-panel h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 6px; }
+.settings-panel .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.settings-panel .row + .row { margin-top: 6px; }
 
 /* ---------- Emoji-Picker in der Caption ---------- */
 .captionbox { position: relative; }
-.captionbox textarea { padding-bottom: 28px; }
+.captionbox textarea { padding-bottom: 21px; }
 button.emoji-btn {
   position: absolute;
-  left: 5px;
-  bottom: 4px;
+  left: 4px;
+  bottom: 3px;
   background: none;
   color: var(--ink-3);
-  padding: 0 5px;
+  padding: 0 4px;
   font-size: 18px;
   font-weight: 400;
   line-height: 24px;
 }
 button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
-.emoji-pop { position: fixed; z-index: 20; box-shadow: var(--sh); border-radius: 8px; }
+.emoji-pop { position: fixed; z-index: 20; box-shadow: var(--sh); border-radius: 6px; }
 /* Globale Input-Styles nicht auf die Picker-Suche anwenden (Lupe links) */
 .emoji-pop .epr-search-container input { padding: 0 30px 0 40px; border-radius: 8px; }
 
 /* ---------- Szene: farbiges Label, Klick oeffnet das Eingabefeld ---------- */
 /* Ganze Zelle ist Klickflaeche, die Farbe sitzt nur auf dem Text */
 .scene-tag {
-  height: 100px;
+  height: 75px;
   border-radius: var(--r-sm);
   overflow: hidden;
   cursor: text;
@@ -340,7 +340,7 @@ button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--i
 .scene-label {
   display: inline-block;
   max-width: 100%;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: var(--r-sm);
   font-size: 14px;
   font-weight: 500;
@@ -352,12 +352,12 @@ button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--i
 .scene-tag.empty:hover { border-color: var(--ink-3); }
 
 /* ---------- Planer: Filter "Vergangen" ---------- */
-.subbar { margin: 0 0 12px; }
+.subbar { margin: 0 0 9px; }
 button.toggle {
   background: var(--card);
   color: var(--ink-2);
   border: 1px solid var(--line);
-  padding: 5px 14px;
+  padding: 4px 10px;
   font-size: 14px;
 }
 button.toggle:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
@@ -372,9 +372,9 @@ tbody td .scene-edit textarea {
   grid-area: 1 / 1;
   width: auto;
   height: auto;
-  min-width: 60px;
+  min-width: 45px;
   min-height: 0;
-  padding: 2px 7px;
+  padding: 2px 5px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   font: inherit;
