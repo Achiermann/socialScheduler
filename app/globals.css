@@ -403,3 +403,13 @@ button.shaker:hover:not(:disabled) { background: none; }
   80% { transform: translate(0, 1px) rotate(1deg); }
   90% { transform: translate(0, -1px) rotate(0); }
 }
+button.linkbtn {
+  background: none;
+  padding: 0 0 0 6px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--blue-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+button.linkbtn:hover:not(:disabled) { background: none; color: var(--blue-ink); }

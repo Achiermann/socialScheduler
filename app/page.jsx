@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { spreadScenes } from "@/lib/spread";
 
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
   const [shakeKey, setShakeKey] = useState(0); // neu mounten = Shake-Animation neu starten
+  const [undoOrder, setUndoOrder] = useState(null); // Reihenfolge vor dem letzten Shake
   const [showPast, setShowPast] = useState(false); // Planer: vergangene Slots einblenden
   const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
@@ -138,6 +140,11 @@ export default function Dashboard() {
     const toIdx = list.findIndex((p) => p.id === targetId);
     const [moved] = list.splice(fromIdx, 1);
     list.splice(toIdx, 0, moved);
+    setUndoOrder(null);
+    applyOrder(list, "Reihenfolge gespeichert.");
+  }
+
+  async function applyOrder(list, okMsg) {
     // Daten bleiben am Slot (Position), nur die Videos wandern - sofort anzeigen,
     // der Server rechnet anschliessend verbindlich nach
     setPosts(list.map((p, i) => (
@@ -148,8 +155,27 @@ export default function Dashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: list.map((p) => p.id) }),
     });
-    setMsg(res.ok ? "Reihenfolge gespeichert." : "Fehler beim Speichern der Reihenfolge.");
+    setMsg(res.ok ? okMsg : "Fehler beim Speichern der Reihenfolge.");
     refreshDates();
+  }
+
+  // Shaker: gleiche Szenen moeglichst weit auseinander verteilen. Vergangene und
+  // bereits (teilweise) gepostete Videos bleiben auf ihrem Platz.
+  function shake() {
+    setShakeKey((k) => k + 1);
+    const fixed = (p) => started(p) || isPast(p);
+    const spread = spreadScenes(posts.filter((p) => !fixed(p)));
+    let next = 0;
+    const list = posts.map((p) => (fixed(p) ? p : spread[next++]));
+    setUndoOrder(posts.map((p) => p.id));
+    applyOrder(list, "Szenen verteilt.");
+  }
+
+  function undoShake() {
+    const byId = new Map(posts.map((p) => [p.id, p]));
+    const list = undoOrder.map((id) => byId.get(id)).filter(Boolean);
+    setUndoOrder(null);
+    applyOrder(list, "Verteilung rückgängig gemacht.");
   }
 
   // Holt nur die Slot-Daten neu, ohne ungespeicherte Eingaben zu ueberschreiben
@@ -419,7 +445,10 @@ export default function Dashboard() {
           )}
         </div>
       </header>
-      <p className="msg">{posts.length} Posts. {msg}</p>
+      <p className="msg">
+        {posts.length} Posts. {msg}
+        {undoOrder && <button className="linkbtn" onClick={undoShake}>Rückgängig</button>}
+      </p>
       <div className="switchbar">
         <div className="switch" role="tablist">
           {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
@@ -429,7 +458,7 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-        <button className="shaker" title="Shake!" aria-label="Shaker schütteln" onClick={() => setShakeKey((k) => k + 1)}>
+        <button className="shaker" title="Szenen verteilen" aria-label="Szenen verteilen" onClick={shake}>
           <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="50" height="67" viewBox="0 0 48 64"
             fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {/* Klappdeckel mit Ausguss */}
