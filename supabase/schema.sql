@@ -8,8 +8,7 @@ create table if not exists scheduler.posts (
   scheduled_at timestamptz,          -- null = noch nicht eingeplant
   caption text default '',
   duration_sec integer,
-  synth_info text,
-  drum_info text,
+  comment text,                      -- Kommentar (intern)
   post_ig boolean default true,
   post_tt boolean default true,
   post_yt boolean default true,

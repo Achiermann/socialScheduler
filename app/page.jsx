@@ -172,10 +172,7 @@ export default function Dashboard() {
       </td>
       <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
       <td>
-        <textarea className="small" value={p.synth_info || ""} onChange={(e) => edit(p.id, { synth_info: e.target.value })} />
-      </td>
-      <td>
-        <textarea className="small" value={p.drum_info || ""} onChange={(e) => edit(p.id, { drum_info: e.target.value })} />
+        <textarea className="small" value={p.comment || ""} onChange={(e) => edit(p.id, { comment: e.target.value })} />
       </td>
     </>
   );
@@ -250,9 +247,7 @@ export default function Dashboard() {
             <th style={{ width: 175 }}>Geplant (Lokalzeit)</th>
             <th>Caption</th>
             <th>Länge</th>
-            <th>synthComment</th>
-            <th>drumComment</th>
-            <th>Plattformen</th>
+            <th>Kommentar (intern)</th>
             <th>Status</th>
             <th></th>
           </tr>
@@ -294,18 +289,6 @@ export default function Dashboard() {
                 </div>
               </td>
               {textCells(p)}
-              <td>
-                {["ig", "tt", "yt"].map((k) => (
-                  <label key={k} style={{ display: "block", fontSize: 13 }}>
-                    <input
-                      type="checkbox"
-                      checked={p[`post_${k}`]}
-                      onChange={(e) => edit(p.id, { [`post_${k}`]: e.target.checked })}
-                    />{" "}
-                    {k.toUpperCase()}
-                  </label>
-                ))}
-              </td>
               {statusCell(p)}
               {saveCell(p)}
             </tr>
@@ -320,8 +303,7 @@ export default function Dashboard() {
             <th>Video</th>
             <th>Caption</th>
             <th>Länge</th>
-            <th>synthComment</th>
-            <th>drumComment</th>
+            <th>Kommentar (intern)</th>
             <th>Status</th>
             <th></th>
           </tr>

@@ -11,7 +11,7 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
-const EDITABLE = ["scheduled_at", "caption", "synth_info", "drum_info", "post_ig", "post_tt", "post_yt", "ig_status", "tt_status", "yt_status"];
+const EDITABLE = ["scheduled_at", "caption", "comment", "ig_status", "tt_status", "yt_status"];
 
 export async function PATCH(req) {
   const { id, ...fields } = await req.json();
