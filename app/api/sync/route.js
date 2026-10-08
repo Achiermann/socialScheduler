@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
 import { listVideos, videoDuration, folderPath } from "@/lib/dropbox";
-import { applySlots } from "@/lib/plan";
+import { applySlots, saveOrder } from "@/lib/plan";
+import { insertNew } from "@/lib/spread";
 
 export const maxDuration = 300;
 
@@ -25,7 +26,22 @@ export async function POST() {
       const { error } = await supabase.from("posts").upsert(fresh, { onConflict: "filename", ignoreDuplicates: true });
       if (error) throw new Error(error.message);
     }
-    // Neue Videos haengen hinten an und bekommen den naechsten freien Slot
+    // Neue Videos nicht hinten anhaengen, sondern dort einfuegen, wo sie am
+    // weitesten von Videos derselben Session entfernt sind
+    if (fresh.length) {
+      const { data: all, error: e } = await supabase
+        .from("posts")
+        .select("id, filename, scene, scheduled_at, ig_status, tt_status, yt_status")
+        .order("sort_order", { ascending: true, nullsFirst: false })
+        .order("filename");
+      if (e) throw new Error(e.message);
+      const freshNames = new Set(fresh.map((v) => v.filename));
+      const ordered = insertNew(
+        all.filter((p) => !freshNames.has(p.filename)),
+        all.filter((p) => freshNames.has(p.filename))
+      );
+      await saveOrder(supabase, ordered.map((p) => p.id));
+    }
     await applySlots(supabase);
 
     // Pfade nachziehen, wenn sich der Speicherort geaendert hat (z.B. Ordner-Umzug)

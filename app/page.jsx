@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { spreadScenes } from "@/lib/spread";
+import { spreadScenes, isFixed } from "@/lib/spread";
 
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
@@ -159,14 +159,11 @@ export default function Dashboard() {
     refreshDates();
   }
 
-  // Shaker: gleiche Szenen moeglichst weit auseinander verteilen. Vergangene und
-  // bereits (teilweise) gepostete Videos bleiben auf ihrem Platz.
+  // Shaker: gleiche Sessions/Szenen moeglichst weit auseinander verteilen. Vergangene
+  // und bereits (teilweise) gepostete Videos bleiben auf ihrem Platz, zaehlen aber mit.
   function shake() {
     setShakeKey((k) => k + 1);
-    const fixed = (p) => started(p) || isPast(p);
-    const spread = spreadScenes(posts.filter((p) => !fixed(p)));
-    let next = 0;
-    const list = posts.map((p) => (fixed(p) ? p : spread[next++]));
+    const list = spreadScenes(posts, isFixed);
     setUndoOrder(posts.map((p) => p.id));
     applyOrder(list, "Szenen verteilt.");
   }
