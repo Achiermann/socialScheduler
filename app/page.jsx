@@ -32,6 +32,22 @@ export default function Dashboard() {
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
   const [view, setView] = useState("planer"); // planer | uebersicht
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
+  // Dropbox-Templinks gelten 4h; beim Hover vorgeladen, damit der Klick sofort abspielt
+  const videoLinks = useRef({});
+
+  function prefetchLink(path) {
+    const c = videoLinks.current[path];
+    if (c && (c.pending || Date.now() < c.until)) return;
+    videoLinks.current[path] = { pending: true };
+    fetch(`/api/video?json=1&path=${encodeURIComponent(path)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(({ link }) => { videoLinks.current[path] = { link, until: Date.now() + 3 * 3600 * 1000 }; })
+      .catch(() => { delete videoLinks.current[path]; });
+  }
+  function videoSrc(path) {
+    const c = videoLinks.current[path];
+    return c?.link && Date.now() < c.until ? c.link : `/api/video?raw=1&path=${encodeURIComponent(path)}`;
+  }
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
 
@@ -159,7 +175,7 @@ export default function Dashboard() {
         {playingId === p.id ? (
           <video
             className="thumb"
-            src={`/api/video?raw=1&path=${encodeURIComponent(p.dropbox_path)}`}
+            src={videoSrc(p.dropbox_path)}
             poster={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
             autoPlay
             playsInline
@@ -174,6 +190,7 @@ export default function Dashboard() {
             src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
             alt=""
             loading="lazy"
+            onMouseEnter={() => prefetchLink(p.dropbox_path)}
             onClick={() => setPlayingId(p.id)}
             title="Abspielen"
           />
