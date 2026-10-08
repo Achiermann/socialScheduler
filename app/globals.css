@@ -309,3 +309,22 @@ button.gear:hover:not(:disabled), button.gear[aria-expanded="true"] { background
 .settings-panel h3 { font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px; }
 .settings-panel .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .settings-panel .row + .row { margin-top: 8px; }
+
+/* ---------- Emoji-Picker in der Caption ---------- */
+.captionbox { position: relative; }
+.captionbox textarea { padding-bottom: 28px; }
+button.emoji-btn {
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  background: none;
+  color: var(--ink-3);
+  padding: 0 5px;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+}
+button.emoji-btn:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
+.emoji-pop { position: fixed; z-index: 20; box-shadow: var(--sh); border-radius: 8px; }
+/* Globale Input-Styles nicht auf die Picker-Suche anwenden (Lupe links) */
+.emoji-pop .epr-search-container input { padding: 0 30px 0 40px; border-radius: 8px; }

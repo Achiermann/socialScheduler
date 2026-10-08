@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+
+// Picker erst beim ersten Oeffnen laden (grosses Paket)
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 function Badge({ status }) {
   return <span className={`badge ${status}`}>{status}</span>;
@@ -50,6 +54,52 @@ export default function Dashboard() {
     return c?.link && Date.now() < c.until ? c.link : `/api/video?raw=1&path=${encodeURIComponent(path)}`;
   }
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Emoji-Picker fuer eine Caption: { id, top, left } (fixe Position am Button)
+  const [emojiFor, setEmojiFor] = useState(null);
+  const emojiRef = useRef(null);
+
+  useEffect(() => {
+    if (!emojiFor) return;
+    const onDown = (e) => {
+      if (!emojiRef.current?.contains(e.target) && !e.target.closest(".emoji-btn")) setEmojiFor(null);
+    };
+    const onKey = (e) => { if (e.key === "Escape") setEmojiFor(null); };
+    const onScroll = () => setEmojiFor(null);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [emojiFor]);
+
+  function toggleEmoji(id, btn) {
+    if (emojiFor?.id === id) { setEmojiFor(null); return; }
+    const r = btn.getBoundingClientRect();
+    const W = 320, H = 400;
+    const below = r.bottom + 6 + H <= window.innerHeight;
+    setEmojiFor({
+      id,
+      top: below ? r.bottom + 6 : Math.max(8, r.top - 6 - H),
+      left: Math.min(r.left, window.innerWidth - W - 8),
+    });
+  }
+
+  // Fuegt das Emoji an der Cursor-Position der Caption ein
+  function insertEmoji(id, emoji) {
+    const ta = document.getElementById(`caption-${id}`);
+    const value = posts.find((p) => p.id === id)?.caption || "";
+    const start = ta?.selectionStart ?? value.length;
+    const end = ta?.selectionEnd ?? value.length;
+    edit(id, { caption: value.slice(0, start) + emoji + value.slice(end) });
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+  }
   const settingsRef = useRef(null);
 
   // Einstellungen schliessen bei Klick daneben oder Escape
@@ -227,7 +277,19 @@ export default function Dashboard() {
   const textCells = (p) => (
     <>
       <td>
-        <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} onBlur={() => flush(p.id)} />
+        <div className="captionbox">
+          <textarea id={`caption-${p.id}`} value={p.caption || ""}
+            onChange={(e) => edit(p.id, { caption: e.target.value })} onBlur={() => flush(p.id)} />
+          <button
+            className="emoji-btn"
+            title="Emoji einfügen"
+            aria-label="Emoji einfügen"
+            onMouseDown={(e) => e.preventDefault()} // Cursor-Position im Textfeld behalten
+            onClick={(e) => toggleEmoji(p.id, e.currentTarget)}
+          >
+            ☺
+          </button>
+        </div>
       </td>
       <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
       <td>
@@ -388,6 +450,18 @@ export default function Dashboard() {
           ))}
         </tbody>
       </table>
+      )}
+      {emojiFor && (
+        <div className="emoji-pop" ref={emojiRef} style={{ top: emojiFor.top, left: emojiFor.left }}>
+          <EmojiPicker
+            width={320}
+            height={400}
+            lazyLoadEmojis
+            previewConfig={{ showPreview: false }}
+            searchPlaceholder="Suchen (englisch)"
+            onEmojiClick={(d) => insertEmoji(emojiFor.id, d.emoji)}
+          />
+        </div>
       )}
     </main>
   );
