@@ -365,3 +365,23 @@ button.toggle.active, button.toggle.active:hover:not(:disabled) { background: va
 /* Vergangene Slots gedaempft */
 tr.past td:not(.slot) { opacity: 0.6; }
 tr.past td.slot { color: var(--ink-3); }
+.scene-edit { display: inline-grid; max-width: 100%; vertical-align: top; }
+.scene-edit::after { content: attr(data-value) " "; visibility: hidden; }
+.scene-edit::after,
+tbody td .scene-edit textarea {
+  grid-area: 1 / 1;
+  width: auto;
+  height: auto;
+  min-width: 60px;
+  min-height: 0;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}

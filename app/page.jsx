@@ -290,9 +290,13 @@ export default function Dashboard() {
       </td>
       <td className="scene">
         {editingScene === p.id ? (
+          // Unsichtbare Kopie des Texts (::after) gibt Breite und Hoehe vor -> Feld so gross wie der Text
+          <div className="scene-edit" data-value={p.scene || ""}>
           <textarea
-            className="small"
+            rows={1}
+            cols={1} // keine Eigenbreite, die Breite kommt vom Text
             autoFocus
+            style={{ background: sceneColor(p.scene) || undefined }}
             value={p.scene || ""}
             onChange={(e) => edit(p.id, { scene: e.target.value })}
             onBlur={() => { flush(p.id); setEditingScene(null); }}
@@ -300,6 +304,7 @@ export default function Dashboard() {
               if (e.key === "Escape" || (e.key === "Enter" && !e.shiftKey)) { e.preventDefault(); e.currentTarget.blur(); }
             }}
           />
+          </div>
         ) : (
           <div
             className={"scene-tag" + (p.scene?.trim() ? "" : " empty")}
