@@ -348,6 +348,7 @@ export default function Dashboard() {
   );
   const textCells = (p) => (
     <>
+      <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
       <td>
         <div className="captionbox">
           <textarea id={`caption-${p.id}`} value={p.caption || ""}
@@ -363,7 +364,6 @@ export default function Dashboard() {
           </button>
         </div>
       </td>
-      <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
       <td>
         <textarea className="small" value={p.comment || ""} onChange={(e) => edit(p.id, { comment: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
@@ -495,8 +495,8 @@ export default function Dashboard() {
             <th></th>
             <th>Video</th>
             <th>Szene</th>
-            <th>Caption</th>
             <th>Länge</th>
+            <th>Caption</th>
             <th>Kommentar (intern)</th>
             <th>Status</th>
           </tr>
@@ -537,8 +537,8 @@ export default function Dashboard() {
             <th></th>
             <th>Video</th>
             <th>Szene</th>
-            <th>Caption</th>
             <th>Länge</th>
+            <th>Caption</th>
             <th>Kommentar (intern)</th>
             <th>Status</th>
           </tr>
