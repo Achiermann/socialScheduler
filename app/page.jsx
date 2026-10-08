@@ -430,24 +430,22 @@ export default function Dashboard() {
           ))}
         </div>
         <button className="shaker" title="Shake!" aria-label="Shaker schütteln" onClick={() => setShakeKey((k) => k + 1)}>
-          <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="34" height="34" viewBox="0 0 48 48" aria-hidden="true">
-            <defs>
-              <clipPath id="shaker-body"><rect x="16" y="3" width="16" height="42" rx="8" /></clipPath>
-            </defs>
-            <g transform="rotate(-30 24 24)">
-              <g clipPath="url(#shaker-body)">
-                <rect x="16" y="3" width="16" height="42" fill="var(--blue)" />
-                <rect x="16" y="3" width="16" height="9" fill="var(--blue-ink)" />
-                <rect x="16" y="36" width="16" height="9" fill="var(--blue-ink)" />
-                <rect x="16" y="15" width="16" height="2" fill="var(--blue-tint)" />
-                <rect x="16" y="31" width="16" height="2" fill="var(--blue-tint)" />
-                <circle cx="21" cy="21" r="1.4" fill="var(--blue-ink)" />
-                <circle cx="27" cy="23" r="1.4" fill="var(--blue-ink)" />
-                <circle cx="22" cy="26.5" r="1.4" fill="var(--blue-ink)" />
-                <circle cx="26.5" cy="28" r="1.4" fill="var(--blue-ink)" />
-              </g>
-              <rect x="16" y="3" width="16" height="42" rx="8" fill="none" stroke="var(--blue-ink)" strokeWidth="2" />
-            </g>
+          <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="40" height="54" viewBox="0 0 48 64"
+            fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {/* Klappdeckel mit Ausguss */}
+            <path d="M19 10V7.5Q19 6 20.5 6h5Q27 6 27 7.5V10" />
+            <path d="M29 10q4-5 0-6.5" />
+            <path d="M14 15l2-5h16l2 5" />
+            {/* Schraubring */}
+            <rect x="11" y="15" width="26" height="7" rx="1.5" />
+            <path d="M16 15v7M21 15v7M27 15v7M32 15v7" strokeWidth="1" />
+            {/* Becher, leicht konisch */}
+            <path d="M12.5 22l2 35.5Q15 61 18.5 61h11Q33 61 33.5 57.5l2-35.5" />
+            {/* Skala */}
+            <path d="M16 30h5M16.4 37h3.5M16.8 44h5M17.2 51h3.5" strokeWidth="1.2" />
+            {/* Mixball */}
+            <circle cx="27" cy="53" r="4" strokeWidth="1.3" />
+            <path d="M23 53q4-2.5 8 0M27 49q-2.5 4 0 8" strokeWidth="1" />
           </svg>
         </button>
       </div>

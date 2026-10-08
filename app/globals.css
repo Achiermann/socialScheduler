@@ -387,18 +387,19 @@ tbody td .scene-edit textarea {
 }
 
 /* ---------- Shaker ---------- */
-button.shaker { background: none; padding: 2px; line-height: 0; border-radius: 50%; }
+button.shaker { background: none; padding: 3px 6px; margin-right: 28px; line-height: 0; border-radius: var(--r); }
 button.shaker:hover:not(:disabled) { background: var(--hover); }
-.shaker svg.shake { animation: shake 0.5s linear; transform-origin: 50% 50%; }
+/* Schuetteln: kraeftig auf und ab, leicht gekippt, klingt aus */
+.shaker svg.shake { animation: shake 0.5s linear; transform-origin: 50% 60%; }
 @keyframes shake {
   0%, 100% { transform: translate(0, 0) rotate(0); }
-  10% { transform: translate(-2px, 1px) rotate(-14deg); }
-  20% { transform: translate(2px, -1px) rotate(12deg); }
-  30% { transform: translate(-2px, 1px) rotate(-12deg); }
-  40% { transform: translate(2px, -1px) rotate(10deg); }
-  50% { transform: translate(-2px, 1px) rotate(-10deg); }
-  60% { transform: translate(2px, -1px) rotate(8deg); }
-  70% { transform: translate(-1px, 1px) rotate(-6deg); }
-  80% { transform: translate(1px, 0) rotate(4deg); }
-  90% { transform: translate(-1px, 0) rotate(-2deg); }
+  10% { transform: translate(-1px, -6px) rotate(-7deg); }
+  20% { transform: translate(1px, 5px) rotate(6deg); }
+  30% { transform: translate(-1px, -5px) rotate(-6deg); }
+  40% { transform: translate(1px, 4px) rotate(5deg); }
+  50% { transform: translate(-1px, -4px) rotate(-4deg); }
+  60% { transform: translate(1px, 3px) rotate(3deg); }
+  70% { transform: translate(0, -2px) rotate(-2deg); }
+  80% { transform: translate(0, 1px) rotate(1deg); }
+  90% { transform: translate(0, -1px) rotate(0); }
 }
