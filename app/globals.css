@@ -388,7 +388,7 @@ tbody td .scene-edit textarea {
 
 /* ---------- Shaker ---------- */
 button.shaker { background: none; padding: 3px 6px; margin-right: 28px; line-height: 0; border-radius: var(--r); }
-button.shaker:hover:not(:disabled) { background: var(--hover); }
+button.shaker:hover:not(:disabled) { background: none; }
 /* Schuetteln: kraeftig auf und ab, leicht gekippt, klingt aus */
 .shaker svg.shake { animation: shake 0.5s linear; transform-origin: 50% 60%; }
 @keyframes shake {

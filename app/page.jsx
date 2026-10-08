@@ -430,7 +430,7 @@ export default function Dashboard() {
           ))}
         </div>
         <button className="shaker" title="Shake!" aria-label="Shaker schütteln" onClick={() => setShakeKey((k) => k + 1)}>
-          <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="40" height="54" viewBox="0 0 48 64"
+          <svg key={shakeKey} className={shakeKey ? "shake" : ""} width="50" height="67" viewBox="0 0 48 64"
             fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {/* Klappdeckel mit Ausguss */}
             <path d="M19 10V7.5Q19 6 20.5 6h5Q27 6 27 7.5V10" />
