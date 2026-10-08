@@ -308,7 +308,7 @@ export default function Dashboard() {
           />
         )}
       </td>
-      <td>
+      <td className="videocell">
         {p.filename}
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
@@ -349,7 +349,7 @@ export default function Dashboard() {
   const textCells = (p) => (
     <>
       <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
-      <td>
+      <td className="captioncell">
         <div className="captionbox">
           <textarea id={`caption-${p.id}`} value={p.caption || ""}
             onChange={(e) => edit(p.id, { caption: e.target.value })} onBlur={() => flush(p.id)} />
@@ -364,7 +364,7 @@ export default function Dashboard() {
           </button>
         </div>
       </td>
-      <td>
+      <td className="commentcell">
         <textarea className="small" value={p.comment || ""} onChange={(e) => edit(p.id, { comment: e.target.value })} onBlur={() => flush(p.id)} />
       </td>
     </>

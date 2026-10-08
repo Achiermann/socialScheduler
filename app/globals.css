@@ -144,6 +144,10 @@ tbody td { padding-top: 9px; padding-bottom: 9px; }
 tbody td textarea, tbody td textarea.small { display: block; height: 75px; min-height: 0; }
 /* Szene ein Drittel schmaler als die automatische Breite (244px) */
 td.scene { width: 163px; }
+/* Video so schmal wie moeglich, der Platz geht je zur Haelfte an Caption und Kommentar */
+td.videocell { width: 240px; } /* = Breite des laengsten Dateinamens */
+td.captioncell { width: 261px; }
+td.commentcell { width: 256px; }
 /* Caption braucht Breite, sonst frisst sie die schmalste Spalte der Tabelle */
 td textarea:not(.small) { min-width: 135px; }
 textarea.small { min-height: 30px; font-size: 14px; min-width: 70px; }
