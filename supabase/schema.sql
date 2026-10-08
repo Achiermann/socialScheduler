@@ -7,6 +7,7 @@ create table if not exists scheduler.posts (
   dropbox_path text,
   scheduled_at timestamptz,          -- null = noch nicht eingeplant
   caption text default '',
+  scene text,
   duration_sec integer,
   comment text,                      -- Kommentar (intern)
   post_ig boolean default true,

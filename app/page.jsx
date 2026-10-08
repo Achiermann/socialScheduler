@@ -162,7 +162,7 @@ export default function Dashboard() {
   // Zellen, die Planer und Übersicht gemeinsam nutzen
   const videoCells = (p) => (
     <>
-      <td>
+      <td className="thumbcell">
         <img
           className="thumb"
           draggable={false}
@@ -177,6 +177,9 @@ export default function Dashboard() {
         {p.filename}
         <button className="play" onClick={() => openVideo(p)} title="Video in Fenster öffnen">▶</button>
         {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
+      </td>
+      <td>
+        <textarea className="small" value={p.scene || ""} onChange={(e) => edit(p.id, { scene: e.target.value })} />
       </td>
     </>
   );
@@ -292,6 +295,7 @@ export default function Dashboard() {
             <th></th>
             <th></th>
             <th>Video</th>
+            <th>Szene</th>
             <th style={{ width: 175 }}>Geplant (Lokalzeit)</th>
             <th>Caption</th>
             <th>Länge</th>
@@ -349,6 +353,7 @@ export default function Dashboard() {
           <tr>
             <th></th>
             <th>Video</th>
+            <th>Szene</th>
             <th>Caption</th>
             <th>Länge</th>
             <th>Kommentar (intern)</th>
