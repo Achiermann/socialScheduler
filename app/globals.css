@@ -246,3 +246,25 @@ main.legal li::marker { color: var(--blue-600); }
 }
 main.legal code { background: #e7e5e4; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
 main.legal a { color: #1c1917; }
+
+/* ---------- Umschalter Planer / Übersicht ---------- */
+.switch {
+  display: inline-flex;
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  overflow: hidden;
+}
+.switch button {
+  background: var(--card);
+  color: var(--ink-2);
+  border-radius: 0;
+  padding: 7px 18px;
+  font-size: 15px;
+}
+.switch button + button { border-left: 1px solid var(--line); }
+.switch button:hover:not(:disabled) { background: var(--hover); }
+.switch button.active, .switch button.active:hover:not(:disabled) { background: var(--blue); color: var(--blue-ink); }
+/* Übersicht hat keine Drag-Sortierung */
+table.overview tbody tr { cursor: auto; }

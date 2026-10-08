@@ -12,6 +12,10 @@ function toLocal(iso) {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
 }
+// Natuerliche Sortierung: jede Zahl im Namen zaehlt numerisch (0052_01 < 0052_02 < 0053_01)
+function byNumber(a, b) {
+  return a.filename.localeCompare(b.filename, undefined, { numeric: true, sensitivity: "base" });
+}
 function toIso(local) {
   return local ? new Date(local).toISOString() : null;
 }
@@ -26,6 +30,7 @@ export default function Dashboard() {
   const dragId = useRef(null);
   const [overId, setOverId] = useState(null);
   const [armed, setArmed] = useState(null); // Zeile, die gerade "ziehbar scharf" ist
+  const [view, setView] = useState("planer"); // planer | uebersicht
 
   async function dropOn(targetId) {
     const from = dragId.current;
@@ -139,6 +144,74 @@ export default function Dashboard() {
     );
   }
 
+  // Zellen, die Planer und Übersicht gemeinsam nutzen
+  const videoCells = (p) => (
+    <>
+      <td>
+        <img
+          className="thumb"
+          draggable={false}
+          src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
+          alt=""
+          loading="lazy"
+          onClick={() => openVideo(p)}
+          title="Video abspielen"
+        />
+      </td>
+      <td>
+        {p.filename}
+        <button className="play" onClick={() => openVideo(p)} title="Video in Fenster öffnen">▶</button>
+        {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
+      </td>
+    </>
+  );
+  const textCells = (p) => (
+    <>
+      <td>
+        <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} />
+      </td>
+      <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
+      <td>
+        <textarea className="small" value={p.synth_info || ""} onChange={(e) => edit(p.id, { synth_info: e.target.value })} />
+      </td>
+      <td>
+        <textarea className="small" value={p.drum_info || ""} onChange={(e) => edit(p.id, { drum_info: e.target.value })} />
+      </td>
+    </>
+  );
+  const statusCell = (p) => (
+    <td>
+      <div>
+        IG <Badge status={p.ig_status} />
+        {p.ig_status === "error" && (
+          <button className="play" title="Erneut versuchen"
+            onClick={() => { edit(p.id, { ig_status: "pending" }); }}>↻</button>
+        )}
+      </div>
+      <div>
+        TT <Badge status={p.tt_status} />
+        {p.tt_status === "error" && (
+          <button className="play" title="Erneut versuchen"
+            onClick={() => { edit(p.id, { tt_status: "pending" }); }}>&#8635;</button>
+        )}
+      </div>
+      <div>
+        YT <Badge status={p.yt_status} />
+        {p.yt_status === "error" && (
+          <button className="play" title="Erneut versuchen"
+            onClick={() => { edit(p.id, { yt_status: "pending" }); }}>&#8635;</button>
+        )}
+      </div>
+    </td>
+  );
+  const saveCell = (p) => (
+    <td>
+      <button className="secondary" disabled={!dirty[p.id] || busy} onClick={() => save(p.id)}>
+        Speichern
+      </button>
+    </td>
+  );
+
   const unscheduled = posts.filter((p) => !p.scheduled_at).length;
 
   return (
@@ -159,6 +232,15 @@ export default function Dashboard() {
         <a className="link" href="/api/youtube/auth">YouTube verbinden</a>
       </div>
       <p className="msg">{posts.length} Posts, davon {unscheduled} ohne Datum. {msg}</p>
+      <div className="switch" role="tablist">
+        {[["planer", "Planer"], ["uebersicht", "Übersicht"]].map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={view === k}
+            className={view === k ? "active" : ""} onClick={() => setView(k)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {view === "planer" ? (
       <table>
         <thead>
           <tr>
@@ -193,22 +275,7 @@ export default function Dashboard() {
               onDrop={(e) => { e.preventDefault(); dropOn(p.id); }}
             >
               <td className="drag" title="Ziehen zum Umsortieren">⠿</td>
-              <td>
-                <img
-                  className="thumb"
-                  draggable={false}
-                  src={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`}
-                  alt=""
-                  loading="lazy"
-                  onClick={() => openVideo(p)}
-                  title="Video abspielen"
-                />
-              </td>
-              <td>
-                {p.filename}
-                <button className="play" onClick={() => openVideo(p)} title="Video in Fenster öffnen">▶</button>
-                {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
-              </td>
+              {videoCells(p)}
               <td>
                 <div className="datecell">
                   <input
@@ -226,16 +293,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </td>
-              <td>
-                <textarea value={p.caption || ""} onChange={(e) => edit(p.id, { caption: e.target.value })} />
-              </td>
-              <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
-              <td>
-                <textarea className="small" value={p.synth_info || ""} onChange={(e) => edit(p.id, { synth_info: e.target.value })} />
-              </td>
-              <td>
-                <textarea className="small" value={p.drum_info || ""} onChange={(e) => edit(p.id, { drum_info: e.target.value })} />
-              </td>
+              {textCells(p)}
               <td>
                 {["ig", "tt", "yt"].map((k) => (
                   <label key={k} style={{ display: "block", fontSize: 13 }}>
@@ -248,38 +306,38 @@ export default function Dashboard() {
                   </label>
                 ))}
               </td>
-              <td>
-                <div>
-                  IG <Badge status={p.ig_status} />
-                  {p.ig_status === "error" && (
-                    <button className="play" title="Erneut versuchen"
-                      onClick={() => { edit(p.id, { ig_status: "pending" }); }}>↻</button>
-                  )}
-                </div>
-                <div>
-                  TT <Badge status={p.tt_status} />
-                  {p.tt_status === "error" && (
-                    <button className="play" title="Erneut versuchen"
-                      onClick={() => { edit(p.id, { tt_status: "pending" }); }}>&#8635;</button>
-                  )}
-                </div>
-                <div>
-                  YT <Badge status={p.yt_status} />
-                  {p.yt_status === "error" && (
-                    <button className="play" title="Erneut versuchen"
-                      onClick={() => { edit(p.id, { yt_status: "pending" }); }}>&#8635;</button>
-                  )}
-                </div>
-              </td>
-              <td>
-                <button className="secondary" disabled={!dirty[p.id] || busy} onClick={() => save(p.id)}>
-                  Speichern
-                </button>
-              </td>
+              {statusCell(p)}
+              {saveCell(p)}
             </tr>
           ))}
         </tbody>
       </table>
+      ) : (
+      <table className="overview">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Video</th>
+            <th>Caption</th>
+            <th>Länge</th>
+            <th>synthComment</th>
+            <th>drumComment</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...posts].sort(byNumber).map((p) => (
+            <tr key={p.id}>
+              {videoCells(p)}
+              {textCells(p)}
+              {statusCell(p)}
+              {saveCell(p)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      )}
     </main>
   );
 }
