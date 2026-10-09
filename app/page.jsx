@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { spreadScenes, isFixed } from "@/lib/spread";
+import { spreadScenes, isFixed, pinLocked } from "@/lib/spread";
 import { PhoneSvg, PhonePreview } from "./PhonePreview";
 
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
@@ -28,6 +28,22 @@ function sceneColor(name) {
   for (const ch of key) h = (h * 31 + ch.codePointAt(0)) >>> 0;
   return `hsl(${Math.round((h * 137.508) % 360)}, 70%, 86%)`;
 }
+// Datum in Lokalzeit als "YYYY-MM-DD" (Wert fuer <input type="date">)
+function localDay(iso) {
+  const d = iso ? new Date(iso) : new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function LockIcon({ locked }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d={locked ? "M8 11V8a4 4 0 0 1 8 0v3" : "M8 11V8a4 4 0 0 1 7.6-1.8"} />
+    </svg>
+  );
+}
+
 const isPast = (p) => p.scheduled_at && new Date(p.scheduled_at).getTime() < Date.now();
 const started = (p) => [p.ig_status, p.tt_status, p.yt_status].some((s) => s && s !== "pending");
 // Natuerliche Sortierung: jede Zahl im Namen zaehlt numerisch (0052_01 < 0052_02 < 0053_01)
@@ -51,6 +67,12 @@ export default function Dashboard() {
   const [undoOrder, setUndoOrder] = useState(null); // Reihenfolge vor dem letzten Shake
   const [showPast, setShowPast] = useState(false); // Planer: vergangene Slots einblenden
   const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
+  const [editingDate, setEditingDate] = useState(null); // Post-ID, deren Slot-Datum gerade bearbeitet wird
+  const [anchors, setAnchors] = useState({}); // Slot-Index -> eigenes Datum
+  const [lockedIds, setLockedIds] = useState(() => new Set()); // an ihrer Position gesperrte Posts
+  const dateTimer = useRef(null);
+  const dateCancel = useRef(false); // Escape: beim folgenden Blur nichts speichern
+  const isLocked = (p) => lockedIds.has(p.id);
   const [playingId, setPlayingId] = useState(null); // Video, das gerade in der Zeile laeuft
   const [phonePost, setPhonePost] = useState(null); // Post in der Instagram-Vorschau
   const closePhone = useCallback(() => setPhonePost(null), []);
@@ -144,7 +166,40 @@ export default function Dashboard() {
     const [moved] = list.splice(fromIdx, 1);
     list.splice(toIdx, 0, moved);
     setUndoOrder(null);
-    applyOrder(list, "Reihenfolge gespeichert.");
+    // Gesperrte Videos bleiben stehen, die anderen fliessen um sie herum
+    applyOrder(pinLocked(list, posts, isLocked), "Reihenfolge gespeichert.");
+  }
+
+  async function toggleLock(p) {
+    const locked = !isLocked(p);
+    setLockedIds((s) => { const n = new Set(s); if (locked) n.add(p.id); else n.delete(p.id); return n; });
+    const res = await fetch("/api/lock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: p.id, locked }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setLockedIds((s) => { const n = new Set(s); if (locked) n.delete(p.id); else n.add(p.id); return n; });
+      setMsg("Fehler beim Sperren.");
+    }
+  }
+
+  // Eigenes Datum fuer einen Slot; die folgenden Slots rechnen ab dort mit dem
+  // normalen Abstand weiter. date = null entfernt das eigene Datum wieder.
+  async function saveSlotDate(p, date) {
+    clearTimeout(dateTimer.current);
+    const index = posts.findIndex((q) => q.id === p.id);
+    if (date === (anchors[index] || null) || (date && date === localDay(p.scheduled_at) && !anchors[index])) return;
+    const res = await fetch("/api/slot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ index, date }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : { error: "keine Verbindung" };
+    if (!res?.ok) { setMsg(`Datum nicht gespeichert: ${data.error}`); return; }
+    setAnchors(data.anchors || {});
+    setMsg(date ? "Datum gesetzt, folgende Slots angepasst." : "Eigenes Datum entfernt.");
+    refreshDates();
   }
 
   async function applyOrder(list, okMsg) {
@@ -166,7 +221,7 @@ export default function Dashboard() {
   // und bereits (teilweise) gepostete Videos bleiben auf ihrem Platz, zaehlen aber mit.
   function shake() {
     setShakeKey((k) => k + 1);
-    const list = spreadScenes(posts, isFixed);
+    const list = spreadScenes(posts, (p) => isFixed(p) || isLocked(p));
     setUndoOrder(posts.map((p) => p.id));
     applyOrder(list, "Szenen verteilt.");
   }
@@ -212,7 +267,10 @@ export default function Dashboard() {
     load();
     if (!synced.current) { synced.current = true; sync(); } // StrictMode ruft Effekte doppelt auf
     fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).then((d) => {
-      if (d) setPlan({ time: d.time, intervalDays: d.intervalDays });
+      if (!d) return;
+      setPlan({ time: d.time, intervalDays: d.intervalDays });
+      setAnchors(d.anchors || {});
+      setLockedIds(new Set(d.lockedIds || []));
     });
   }, []);
 
@@ -364,7 +422,18 @@ export default function Dashboard() {
   );
   const textCells = (p) => (
     <>
-      <td className="nowrap">{p.duration_sec != null ? `${p.duration_sec}s` : "–"}</td>
+      <td className="nowrap">
+        {p.duration_sec != null ? `${p.duration_sec}s` : "–"}
+        <button
+          className={"lock-btn" + (isLocked(p) ? " locked" : "")}
+          title={isLocked(p) ? "Gesperrt: bleibt an dieser Position (klicken zum Entsperren)" : "Position sperren"}
+          aria-label={isLocked(p) ? "Position entsperren" : "Position sperren"}
+          aria-pressed={isLocked(p)}
+          onClick={() => toggleLock(p)}
+        >
+          <LockIcon locked={isLocked(p)} />
+        </button>
+      </td>
       <td className="captioncell">
         <div className="captionbox">
           <textarea id={`caption-${p.id}`} value={p.caption || ""}
@@ -522,10 +591,10 @@ export default function Dashboard() {
             <tr
               key={p.id}
               className={[overId === p.id && "dragover", isPast(p) && "past"].filter(Boolean).join(" ")}
-              draggable={armed === p.id}
+              draggable={armed === p.id && !isLocked(p)}
               onMouseDown={(e) => {
                 // Ganze Zeile ziehbar - ausser auf interaktiven Elementen
-                if (!e.target.closest("input, textarea, button, select, a, video, img.thumb, .scene-tag")) setArmed(p.id);
+                if (!e.target.closest("input, textarea, button, select, a, video, img.thumb, .scene-tag, .slot-view")) setArmed(p.id);
               }}
               onMouseUp={() => setArmed(null)}
               onDragStart={() => { dragId.current = p.id; }}
@@ -535,10 +604,49 @@ export default function Dashboard() {
               onDrop={(e) => { e.preventDefault(); dropOn(p.id); }}
             >
               <td className="slot">
-                <div className="slot-date">{fmtSlot(p.scheduled_at).date}</div>
-                <div className="slot-time">{fmtSlot(p.scheduled_at).time}</div>
+                {editingDate === p.id ? (
+                  <input
+                    type="date"
+                    className="slot-input"
+                    autoFocus
+                    min={localDay()}
+                    defaultValue={localDay(p.scheduled_at)}
+                    onFocus={(e) => { dateCancel.current = false; try { e.currentTarget.showPicker(); } catch { /* nicht ueberall erlaubt */ } }}
+                    onChange={(e) => {
+                      // Beim Tippen entstehen Zwischenwerte (z.B. Jahr 0002) - nur gueltige,
+                      // kommende Daten und erst kurz nach der letzten Aenderung speichern
+                      const v = e.target.value;
+                      clearTimeout(dateTimer.current);
+                      if (v && v >= localDay()) dateTimer.current = setTimeout(() => saveSlotDate(p, v), 700);
+                    }}
+                    onBlur={(e) => {
+                      const v = e.target.value;
+                      setEditingDate(null);
+                      if (dateCancel.current) { dateCancel.current = false; return; }
+                      if (!v) saveSlotDate(p, null);
+                      else if (v >= localDay()) saveSlotDate(p, v);
+                      else { clearTimeout(dateTimer.current); setMsg("Datum liegt in der Vergangenheit."); }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                      if (e.key === "Escape") { clearTimeout(dateTimer.current); dateCancel.current = true; e.currentTarget.blur(); }
+                    }}
+                  />
+                ) : (
+                  <div
+                    className={"slot-view" + (isFixed(p) ? "" : " editable") + (anchors[posts.indexOf(p)] ? " anchored" : "")}
+                    role={isFixed(p) ? undefined : "button"}
+                    tabIndex={isFixed(p) ? undefined : 0}
+                    title={isFixed(p) ? undefined : anchors[posts.indexOf(p)] ? "Eigenes Datum – klicken zum Ändern, leeren zum Zurücksetzen" : "Klicken zum Ändern"}
+                    onClick={() => { if (!isFixed(p)) setEditingDate(p.id); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !isFixed(p)) setEditingDate(p.id); }}
+                  >
+                    <div className="slot-date">{fmtSlot(p.scheduled_at).date}</div>
+                    <div className="slot-time">{fmtSlot(p.scheduled_at).time}</div>
+                  </div>
+                )}
               </td>
-              <td className="drag" title="Ziehen zum Umsortieren">⠿</td>
+              <td className="drag" title={isLocked(p) ? "Gesperrt" : "Ziehen zum Umsortieren"}>{isLocked(p) ? "" : "⠿"}</td>
               {videoCells(p)}
               {textCells(p)}
               {statusCell(p)}

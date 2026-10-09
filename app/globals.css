@@ -583,3 +583,23 @@ button.phone-btn:hover:not(:disabled) { background: none; opacity: 0.6; }
 .ig-actions > svg:first-child { width: 8cqw; height: 8cqw; }
 .ig-top > svg { width: 7cqw; height: 7cqw; }
 .ig-nav > svg { width: 7cqw; height: 7cqw; }
+
+/* ---------- Slot-Datum bearbeiten ---------- */
+.slot-view { border-radius: var(--r-sm); padding: 2px 4px; margin: -2px -4px; }
+.slot-view.editable { cursor: pointer; }
+.slot-view.editable:hover { background: var(--hover); }
+/* eigenes Datum: Folgeslots rechnen ab hier */
+.slot-view.anchored .slot-date { color: var(--blue-600); text-decoration: underline dotted; text-underline-offset: 3px; }
+input.slot-input { width: 132px; padding: 4px 6px; font-size: 14px; }
+
+/* ---------- Schloss unter der Laenge ---------- */
+button.lock-btn {
+  display: block;
+  margin-top: 6px;
+  background: none;
+  padding: 2px;
+  line-height: 0;
+  color: var(--ink-3);
+}
+button.lock-btn:hover:not(:disabled) { background: none; color: var(--ink); }
+button.lock-btn.locked { color: var(--ink); }

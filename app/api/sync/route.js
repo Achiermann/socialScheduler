@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
 import { listVideos, listArchived, videoDuration, folderPath } from "@/lib/dropbox";
-import { applySlots, saveOrder } from "@/lib/plan";
-import { insertNew } from "@/lib/spread";
+import { applySlots, saveOrder, getPlanSettings } from "@/lib/plan";
+import { insertNew, pinLocked } from "@/lib/spread";
 
 export const maxDuration = 300;
 
@@ -13,7 +13,12 @@ export async function POST() {
     const videos = await listVideos();
     const archived = await listArchived();
     const supabase = db();
-    const { data: existing, error: exErr } = await supabase.from("posts").select("id, filename, dropbox_path");
+    // In Planer-Reihenfolge, damit gesperrte Posts ihre Position behalten koennen
+    const { data: existing, error: exErr } = await supabase
+      .from("posts")
+      .select("id, filename, dropbox_path")
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("filename");
     if (exErr) throw new Error(exErr.message);
     const byName = new Map((existing || []).map((p) => [p.filename, p]));
 
@@ -44,8 +49,11 @@ export async function POST() {
       if (error) throw new Error(error.message);
     }
     // Neue Videos nicht hinten anhaengen, sondern dort einfuegen, wo sie am
-    // weitesten von Videos derselben Session entfernt sind
-    if (fresh.length) {
+    // weitesten von Videos derselben Session entfernt sind. Gesperrte Posts
+    // bleiben dabei (und nach Loeschungen) auf ihrer bisherigen Position.
+    if (fresh.length || removed) {
+      const { lockedIds } = await getPlanSettings(supabase);
+      const locked = new Set(lockedIds);
       const { data: all, error: e } = await supabase
         .from("posts")
         .select("id, filename, scene, scheduled_at, ig_status, tt_status, yt_status")
@@ -57,7 +65,8 @@ export async function POST() {
         all.filter((p) => !freshNames.has(p.filename)),
         all.filter((p) => freshNames.has(p.filename))
       );
-      await saveOrder(supabase, ordered.map((p) => p.id));
+      const final = pinLocked(ordered, existing, (p) => locked.has(p.id));
+      await saveOrder(supabase, final.map((p) => p.id));
     }
     // Nach Neuzugaengen oder Loeschungen rutschen die Slot-Daten nach
     await applySlots(supabase);
