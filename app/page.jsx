@@ -36,10 +36,21 @@ function localDay(iso) {
 
 function LockIcon({ locked }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.8"
       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d={locked ? "M8 11V8a4 4 0 0 1 8 0v3" : "M8 11V8a4 4 0 0 1 7.6-1.8"} />
+      <rect x="5" y="11" width="14" height="10" rx="2" fill={locked ? "var(--gold)" : "none"} />
+    </svg>
+  );
+}
+
+// Rundes Pfeil-Symbol: eigenes Datum zuruecksetzen
+function RedoIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" />
+      <path d="M3 3v5h5" />
     </svg>
   );
 }
@@ -422,7 +433,7 @@ export default function Dashboard() {
   );
   const textCells = (p) => (
     <>
-      <td className="nowrap">
+      <td className="nowrap lengthcell">
         {p.duration_sec != null ? `${p.duration_sec}s` : "–"}
         <button
           className={"lock-btn" + (isLocked(p) ? " locked" : "")}
@@ -633,16 +644,28 @@ export default function Dashboard() {
                     }}
                   />
                 ) : (
+                  <div className="slot-wrap">
+                  {anchors[posts.indexOf(p)] && !isFixed(p) && (
+                    <button
+                      className="slot-reset"
+                      title="Eigenes Datum entfernen – wieder in den Rhythmus einreihen"
+                      aria-label="Eigenes Datum entfernen"
+                      onClick={() => saveSlotDate(p, null)}
+                    >
+                      <RedoIcon />
+                    </button>
+                  )}
                   <div
                     className={"slot-view" + (isFixed(p) ? "" : " editable") + (anchors[posts.indexOf(p)] ? " anchored" : "")}
                     role={isFixed(p) ? undefined : "button"}
                     tabIndex={isFixed(p) ? undefined : 0}
-                    title={isFixed(p) ? undefined : anchors[posts.indexOf(p)] ? "Eigenes Datum – klicken zum Ändern, leeren zum Zurücksetzen" : "Klicken zum Ändern"}
+                    title={isFixed(p) ? undefined : anchors[posts.indexOf(p)] ? "Eigenes Datum – klicken zum Ändern" : "Klicken zum Ändern"}
                     onClick={() => { if (!isFixed(p)) setEditingDate(p.id); }}
                     onKeyDown={(e) => { if (e.key === "Enter" && !isFixed(p)) setEditingDate(p.id); }}
                   >
                     <div className="slot-date">{fmtSlot(p.scheduled_at).date}</div>
                     <div className="slot-time">{fmtSlot(p.scheduled_at).time}</div>
+                  </div>
                   </div>
                 )}
               </td>
