@@ -1,16 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Design-Vokabular nach SBB-Vorbild, Markenfarbe hellblau statt rot.
-   Weiss auf #5AAFE0 liegt bei 2.1:1 - deshalb steht Text auf Blau immer
-   in Marine (--blue-ink), Akzente auf Weiss in --blue-600 (4.9:1). */
+/* Design-Vokabular nach SBB-Vorbild, Markenfarbe Pink (#ff6ba1).
+   Weiss auf Pink ist zu kontrastarm - Text auf Pink steht deshalb in
+   dunklem Beerenton (--accent-ink). */
 :root {
   color-scheme: light;
 
-  --blue: #5aafe0;
-  --blue-hover: #43a2d9;
-  --blue-ink: #0e3a5c;
-  --blue-600: #1b6e9e;
-  --blue-tint: #eaf5fc;
+  --accent: #ff6ba1;
+  --accent-hover: #f7548f;
+  --accent-ink: #3d0a1f; /* Text auf Pink */
+  --accent-tint: #ffe9f2;
 
   --bg: #f4f6f7;
   --card: #ffffff;
@@ -51,7 +50,7 @@ main { max-width: 1300px; margin: 0 auto; padding: 21px 15px 48px; overflow-x: a
 
 h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 3px; }
 
-:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; border-radius: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
 /* ---------- Tabelle: flache SBB-Liste, nur waagrechte Haarlinien ---------- */
 table {
@@ -92,7 +91,7 @@ td.drag {
   text-align: center;
 }
 td.drag:active { cursor: grabbing; }
-tr.dragover td:not(.slot) { border-top: 2px solid var(--blue-600); }
+tr.dragover td:not(.slot) { border-top: 2px solid var(--accent); }
 
 /* Statuszeile "IG [chip] [Retry]" bleibt eine Zeile, sonst bricht die Spalte um */
 td div:has(.badge) {
@@ -135,7 +134,7 @@ th.slot, td.slot {
 .slot-time { font-size: 13px; color: var(--ink-2); }
 input:hover, textarea:hover { border-color: var(--ink-3); }
 input:focus, textarea:focus {
-  outline: 2px solid var(--blue-600);
+  outline: 2px solid var(--accent);
   outline-offset: -1px;
   border-color: transparent;
 }
@@ -152,7 +151,7 @@ td.commentcell { width: 256px; }
 /* Caption braucht Breite, sonst frisst sie die schmalste Spalte der Tabelle */
 td textarea:not(.small) { min-width: 135px; }
 textarea.small { min-height: 30px; font-size: 14px; min-width: 70px; }
-input[type="checkbox"] { accent-color: var(--blue-600); width: 11px; height: 11px; }
+input[type="checkbox"] { accent-color: var(--accent); width: 11px; height: 11px; }
 
 /* ---------- Buttons ---------- */
 button {
@@ -163,11 +162,11 @@ button {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  background: var(--blue);
-  color: var(--blue-ink);
+  background: var(--accent);
+  color: var(--accent-ink);
   transition: background 0.16s var(--ease), border-color 0.16s var(--ease);
 }
-button:hover:not(:disabled) { background: var(--blue-hover); }
+button:hover:not(:disabled) { background: var(--accent-hover); }
 button.secondary {
   background: var(--card);
   color: var(--ink);
@@ -205,8 +204,8 @@ button.play:hover:not(:disabled) { background: var(--hover); }
 
 .msg { font-size: 15px; color: var(--ink-2); }
 
-a.link { font-size: 15px; color: var(--blue-600); text-decoration: underline; text-underline-offset: 2px; }
-a.link:hover { color: var(--blue-ink); }
+a.link { font-size: 15px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+a.link:hover { color: var(--accent-ink); }
 
 /* ---------- Video-Thumbnail ---------- */
 /* Bild fuellt die ganze Zeilenhoehe: absolut positioniert, damit es die Zeile nicht selbst streckt */
@@ -223,7 +222,7 @@ td.thumbcell { position: relative; width: 54px; min-width: 54px; padding: 0; }
   background: var(--line-2);
   transition: box-shadow 0.16s var(--ease);
 }
-.thumb:hover { box-shadow: 0 0 0 2px var(--blue-600); }
+.thumb:hover { box-shadow: 0 0 0 2px var(--accent); }
 
 .nowrap { white-space: nowrap; }
 
@@ -255,7 +254,7 @@ main.legal p, main.legal li { font-size: 17px; line-height: 1.65; }
 main.legal em { font-style: normal; font-size: 15px; color: var(--ink-2); }
 main.legal ul { padding-left: 15px; margin: 9px 0; }
 main.legal li { margin-bottom: 8px; }
-main.legal li::marker { color: var(--blue-600); }
+main.legal li::marker { color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
@@ -281,7 +280,7 @@ main.legal a { color: #1c1917; }
 }
 .switch button + button { border-left: 1px solid var(--line); }
 .switch button:hover:not(:disabled) { background: var(--hover); }
-.switch button.active, .switch button.active:hover:not(:disabled) { background: var(--blue); color: var(--blue-ink); }
+.switch button.active, .switch button.active:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
 /* Übersicht hat keine Drag-Sortierung */
 table.overview tbody tr { cursor: auto; }
 
@@ -366,7 +365,7 @@ button.toggle {
   font-size: 14px;
 }
 button.toggle:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
-button.toggle.active, button.toggle.active:hover:not(:disabled) { background: var(--blue-tint); color: var(--blue-ink); border-color: var(--blue); }
+button.toggle.active, button.toggle.active:hover:not(:disabled) { background: var(--accent-tint); color: var(--accent-ink); border-color: var(--accent); }
 /* Vergangene Slots gedaempft */
 tr.past td:not(.slot) { opacity: 0.6; }
 tr.past td.slot { color: var(--ink-3); }
@@ -413,11 +412,11 @@ button.linkbtn {
   padding: 0 0 0 6px;
   font-size: 15px;
   font-weight: 500;
-  color: var(--blue-600);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-button.linkbtn:hover:not(:disabled) { background: none; color: var(--blue-ink); }
+button.linkbtn:hover:not(:disabled) { background: none; color: var(--accent-ink); }
 
 /* ---------- Smartphone / Instagram-Vorschau ---------- */
 button.phone-btn { display: block; margin-top: 4px; background: none; padding: 0; line-height: 0; }
@@ -590,7 +589,7 @@ button.phone-btn:hover:not(:disabled) { background: none; opacity: 0.6; }
 .slot-view.editable { cursor: pointer; }
 .slot-view.editable:hover { background: var(--hover); }
 /* eigenes Datum: Folgeslots rechnen ab hier */
-.slot-view.anchored .slot-date { color: var(--blue-600); text-decoration: underline dotted; text-underline-offset: 3px; }
+.slot-view.anchored .slot-date { color: var(--accent); text-decoration: underline dotted; text-underline-offset: 3px; }
 input.slot-input { width: 132px; padding: 4px 6px; font-size: 14px; }
 
 /* ---------- Schloss unten rechts in der Laengen-Zelle ---------- */
@@ -612,7 +611,7 @@ button.slot-reset {
   padding: 3px;
   margin-top: 1px;
   line-height: 0;
-  color: var(--blue-600);
+  color: var(--accent);
   border-radius: 50%;
 }
-button.slot-reset:hover:not(:disabled) { background: var(--hover); color: var(--blue-ink); }
+button.slot-reset:hover:not(:disabled) { background: var(--hover); color: var(--accent-ink); }
