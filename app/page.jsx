@@ -681,7 +681,7 @@ export default function Dashboard() {
                     </button>
                   )}
                   <div
-                    className={"slot-view" + (isFixed(p) ? "" : " editable") + (anchors[posts.indexOf(p)] ? " anchored" : "")}
+                    className={"slot-view" + (isFixed(p) ? "" : " editable")}
                     role={isFixed(p) ? undefined : "button"}
                     tabIndex={isFixed(p) ? undefined : 0}
                     title={isFixed(p) ? undefined : anchors[posts.indexOf(p)] ? "Eigenes Datum – klicken zum Ändern" : "Klicken zum Ändern"}
