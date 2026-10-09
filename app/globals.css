@@ -1,15 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Design-Vokabular nach SBB-Vorbild, Markenfarbe Pink (#ff6ba1).
-   Weiss auf Pink ist zu kontrastarm - Text auf Pink steht deshalb in
-   dunklem Beerenton (--accent-ink). */
+/* Design-Vokabular nach SBB-Vorbild, Markenfarbe Pfirsich (#ffcfb7).
+   Weiss auf Pfirsich ist zu kontrastarm - Text auf Pfirsich steht deshalb
+   in dunklem Braun (--accent-ink). */
 :root {
   color-scheme: light;
 
-  --accent: #ff6ba1;
-  --accent-hover: #f7548f;
-  --accent-ink: #3d0a1f; /* Text auf Pink */
-  --accent-tint: #ffe9f2;
+  --accent: #ffcfb7;
+  --accent-hover: #ffbe9f;
+  --accent-ink: #4a2412; /* Text auf Pfirsich */
+  --accent-tint: #fff3ed;
 
   --bg: #f4f6f7;
   --card: #ffffff;
