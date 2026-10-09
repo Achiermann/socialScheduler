@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { spreadScenes, isFixed, pinLocked } from "@/lib/spread";
+import { slotDates } from "@/lib/plan";
 import { PhoneSvg, PhonePreview } from "./PhonePreview";
 
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
@@ -80,6 +81,7 @@ export default function Dashboard() {
   const [editingScene, setEditingScene] = useState(null); // Post-ID, deren Szene gerade bearbeitet wird
   const [editingDate, setEditingDate] = useState(null); // Post-ID, deren Slot-Datum gerade bearbeitet wird
   const [anchors, setAnchors] = useState({}); // Slot-Index -> eigenes Datum
+  const [savedPlan, setSavedPlan] = useState(null); // gespeicherte Slot-Einstellungen (fuer sofortige Anzeige)
   const [lockedIds, setLockedIds] = useState(() => new Set()); // an ihrer Position gesperrte Posts
   const dateTimer = useRef(null);
   const dateCancel = useRef(false); // Escape: beim folgenden Blur nichts speichern
@@ -201,17 +203,38 @@ export default function Dashboard() {
     clearTimeout(dateTimer.current);
     const index = posts.findIndex((q) => q.id === p.id);
     if (date === (anchors[index] || null) || (date && date === localDay(p.scheduled_at) && !anchors[index])) return;
+    const prev = anchors;
+    const next = { ...anchors };
+    if (date) next[index] = date; else delete next[index];
+    // Sofort anzeigen - der Server braucht einen Moment, ohne Rueckmeldung
+    // wuerde man sonst ein zweites Mal klicken
+    setAnchors(next);
+    showSlots(next);
+    setEditingDate(null);
     const res = await fetch("/api/slot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ index, date }),
     }).catch(() => null);
     const data = res ? await res.json().catch(() => ({})) : { error: "keine Verbindung" };
-    if (!res?.ok) { setMsg(`Datum nicht gespeichert: ${data.error}`); return; }
+    if (!res?.ok) {
+      setAnchors(prev);
+      showSlots(prev);
+      setMsg(`Datum nicht gespeichert: ${data.error}`);
+      return;
+    }
     setAnchors(data.anchors || {});
     setMsg(date ? "Datum gesetzt, folgende Slots angepasst." : "Eigenes Datum entfernt.");
     refreshDates();
   }
+
+  // Slot-Daten im Browser berechnen (gleiche Rechnung wie auf dem Server)
+  function showSlots(anchorMap) {
+    if (!savedPlan) return;
+    const dates = slotDates(posts.length, { ...savedPlan, intervalDays: Number(savedPlan.intervalDays), anchors: anchorMap });
+    setPosts((ps) => ps.map((q, i) => (started(q) ? q : { ...q, scheduled_at: dates[i] })));
+  }
+
 
   async function applyOrder(list, okMsg) {
     // Daten bleiben am Slot (Position), nur die Videos wandern - sofort anzeigen,
@@ -263,6 +286,7 @@ export default function Dashboard() {
     setBusy(false);
     if (!res.ok) { setMsg(`Fehler: ${data.error}`); return; }
     setPlan({ time: data.time, intervalDays: data.intervalDays });
+    setSavedPlan({ start: data.start, time: data.time, intervalDays: data.intervalDays });
     setMsg(`Slots aktualisiert (${data.updated} Daten geändert).`);
     refreshDates();
   }
@@ -280,6 +304,7 @@ export default function Dashboard() {
     fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).then((d) => {
       if (!d) return;
       setPlan({ time: d.time, intervalDays: d.intervalDays });
+      setSavedPlan({ start: d.start, time: d.time, intervalDays: d.intervalDays });
       setAnchors(d.anchors || {});
       setLockedIds(new Set(d.lockedIds || []));
     });
