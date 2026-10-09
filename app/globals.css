@@ -609,7 +609,7 @@ button.slot-reset {
   padding: 3px;
   margin-top: 1px;
   line-height: 0;
-  color: var(--accent);
+  color: var(--ink);
   border-radius: 50%;
 }
-button.slot-reset:hover:not(:disabled) { background: var(--hover); color: var(--accent-ink); }
+button.slot-reset:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
