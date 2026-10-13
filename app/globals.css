@@ -613,3 +613,14 @@ button.slot-reset {
   border-radius: 50%;
 }
 button.slot-reset:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
+button.recall-btn {
+  display: block;
+  margin: 4px 0 0 auto;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+button.recall-btn:hover:not(:disabled) { background: none; opacity: 0.7; }

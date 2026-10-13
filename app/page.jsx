@@ -228,6 +228,33 @@ export default function Dashboard() {
     refreshDates();
   }
 
+  // Vergangenes Video zurueck in die kommende Planung holen; es wird verteilt
+  // eingefuegt, alle anderen Termine bleiben, wie sie sind
+  async function recall(p) {
+    const done = [["Instagram", p.ig_status, "published"], ["TikTok", p.tt_status, "drafted"], ["YouTube", p.yt_status, "published"]]
+      .filter(([, s, ok]) => s === ok).map(([name]) => name);
+    if (done.length && !confirm(`${p.filename} ist schon auf ${done.join(", ")} gepostet und wird dort beim neuen Termin nochmal gepostet. Trotzdem zurückholen?`)) return;
+    setBusy(true);
+    const res = await fetch("/api/recall", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: p.id }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : { error: "keine Verbindung" };
+    setBusy(false);
+    if (!res?.ok) { setMsg(`Zurückholen fehlgeschlagen: ${data.error}`); return; }
+    setSavedPlan({ start: data.start, time: data.time, intervalDays: data.intervalDays });
+    setAnchors(data.anchors || {});
+    setLockedIds(new Set(data.lockedIds || []));
+    setUndoOrder(null);
+    const fresh = await fetch("/api/posts").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (fresh) {
+      setPosts(fresh.map((q) => ({ ...q, ...pendingEdits.current[q.id] })));
+      const when = fresh.find((q) => q.id === p.id)?.scheduled_at;
+      setMsg(`${p.filename} zurückgeholt${when ? ` – neuer Termin ${fmtSlot(when).date} ${fmtSlot(when).time}` : ""}.`);
+    }
+  }
+
   // Slot-Daten im Browser berechnen (gleiche Rechnung wie auf dem Server)
   function showSlots(anchorMap) {
     if (!savedPlan) return;
@@ -690,6 +717,10 @@ export default function Dashboard() {
                   >
                     <div className="slot-date">{fmtSlot(p.scheduled_at).date}</div>
                     <div className="slot-time">{fmtSlot(p.scheduled_at).time}</div>
+                    {isFixed(p) && (
+                      <button className="recall-btn" disabled={busy} title="Zurück in die kommende Planung holen"
+                        onClick={() => recall(p)}>zurückholen</button>
+                    )}
                   </div>
                   </div>
                 )}
