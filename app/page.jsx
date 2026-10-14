@@ -8,8 +8,9 @@ import { PhoneSvg, PhonePreview } from "./PhonePreview";
 // Picker erst beim ersten Oeffnen laden (grosses Paket)
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
-function Badge({ status }) {
-  return <span className={`badge ${status}`}>{status}</span>;
+function Badge({ status, error }) {
+  // Fehlertext nur als Tooltip, nicht direkt in der Liste
+  return <span className={`badge ${status}`} title={status === "error" ? error || undefined : undefined}>{status}</span>;
 }
 
 // Slot-Datum in Lokalzeit: "12.10.26" + "10:00"
@@ -447,7 +448,6 @@ export default function Dashboard() {
         >
           <PhoneSvg width="25" height="50" screen={`/api/thumb?path=${encodeURIComponent(p.dropbox_path)}`} />
         </button>
-        {p.last_error && <div className="msg" style={{ color: "#b91c1c" }}>{p.last_error}</div>}
       </td>
       <td className="scene">
         {editingScene === p.id ? (
@@ -520,21 +520,21 @@ export default function Dashboard() {
   const statusCell = (p) => (
     <td>
       <div>
-        IG <Badge status={p.ig_status} />
+        IG <Badge status={p.ig_status} error={p.last_error} />
         {p.ig_status === "error" && (
           <button className="play" title="Erneut versuchen"
             onClick={() => edit(p.id, { ig_status: "pending" }, true)}>↻</button>
         )}
       </div>
       <div>
-        TT <Badge status={p.tt_status} />
+        TT <Badge status={p.tt_status} error={p.last_error} />
         {p.tt_status === "error" && (
           <button className="play" title="Erneut versuchen"
             onClick={() => edit(p.id, { tt_status: "pending" }, true)}>&#8635;</button>
         )}
       </div>
       <div>
-        YT <Badge status={p.yt_status} />
+        YT <Badge status={p.yt_status} error={p.last_error} />
         {p.yt_status === "error" && (
           <button className="play" title="Erneut versuchen"
             onClick={() => edit(p.id, { yt_status: "pending" }, true)}>&#8635;</button>
